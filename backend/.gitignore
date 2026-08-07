@@ -3,3 +3,7 @@ node_modules
 .env
 
 /generated/prisma
+
+# Archivos de pnpm
+pnpm-lock.yaml
+pnpm-workspace.yaml
