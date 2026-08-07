@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -10,4 +5,415 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+model accion {
+  idaccion Int       @id
+  nombre   String    @db.VarChar(100)
+  permiso  permiso[]
+}
+
+model adopcion {
+  idadopcion          Int                   @id
+  idanimal            Int
+  idadoptante         Int
+  fechaentrega        DateTime              @db.Date
+  observaciones       String                @db.VarChar(500)
+  adoptante           adoptante             @relation(fields: [idadoptante], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
+  animal              animal                @relation(fields: [idanimal], references: [idanimal], onDelete: NoAction, onUpdate: NoAction)
+  seguimientoadopcion seguimientoadopcion[]
+}
+
+model adoptante {
+  idpersona       Int             @id
+  idestadoa       Int
+  adopcion        adopcion[]
+  estadoadoptante estadoadoptante @relation(fields: [idestadoa], references: [idestadoa], onDelete: NoAction, onUpdate: NoAction)
+  persona         persona         @relation(fields: [idpersona], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model alimento {
+  idinsumo      Int           @id
+  idespecie     Int
+  marca         String        @db.VarChar(100)
+  tipoalimento  String        @db.VarChar(50)
+  peso          Int
+  especieanimal especieanimal @relation(fields: [idespecie], references: [idespecie], onDelete: NoAction, onUpdate: NoAction)
+  insumo        insumo        @relation(fields: [idinsumo], references: [idinsumo], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model animal {
+  idanimal          Int                 @id
+  idespecie         Int
+  nombre            String              @db.VarChar(100)
+  sexo              String              @db.VarChar(10)
+  edadestimada      Int
+  colorpelaje       String              @db.VarChar(50)
+  peso              Float
+  castrado          Boolean
+  lugarorigen       String              @db.VarChar(150)
+  estado            String              @db.VarChar(30)
+  fechaingreso      DateTime            @db.Date
+  lactante          Boolean
+  adopcion          adopcion[]
+  especieanimal     especieanimal       @relation(fields: [idespecie], references: [idespecie], onDelete: NoAction, onUpdate: NoAction)
+  gasto             gasto[]
+  historialclinico  historialclinico[]
+  publicacion       publicacion[]
+  solicitudadopcion solicitudadopcion[]
+  transito          transito[]
+}
+
+model archivo {
+  idarchivo           Int                 @id
+  idseguimiento       Int
+  archivo             String              @db.VarChar(255)
+  seguimientoadopcion seguimientoadopcion @relation(fields: [idseguimiento], references: [idseguimiento], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model direccionpersona {
+  iddirper    Int       @id
+  idpersona   Int
+  idlocalidad Int
+  calle       String    @db.VarChar(150)
+  numero      String    @db.VarChar(10)
+  localidad   localidad @relation(fields: [idlocalidad], references: [idlocalidad], onDelete: NoAction, onUpdate: NoAction)
+  persona     persona   @relation(fields: [idpersona], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model donacion {
+  iddonacion Int      @id
+  idpersona  Int
+  monto      Float
+  fecha      DateTime @db.Date
+  canal      String   @db.VarChar(50)
+  persona    persona  @relation(fields: [idpersona], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model especieanimal {
+  idespecie Int        @id
+  nombre    String     @db.VarChar(100)
+  alimento  alimento[]
+  animal    animal[]
+}
+
+model estadoadoptante {
+  idestadoa Int         @id
+  estado    String      @db.VarChar(30)
+  adoptante adoptante[]
+}
+
+model estadotransitante {
+  idestadot   Int           @id
+  estado      String        @db.VarChar(30)
+  transitante transitante[]
+}
+
+model gasto {
+  idgasto     Int       @id
+  idanimal    Int
+  idtipogasto Int
+  descripcion String    @db.VarChar(500)
+  monto       Float
+  fecha       DateTime  @db.Date
+  comprobante String    @db.VarChar(255)
+  reintegrado Boolean
+  animal      animal    @relation(fields: [idanimal], references: [idanimal], onDelete: NoAction, onUpdate: NoAction)
+  tipogasto   tipogasto @relation(fields: [idtipogasto], references: [idtipogasto], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model historialclinico {
+  idhistorial            Int                      @id
+  idanimal               Int
+  fecha                  DateTime                 @db.Timestamp(6)
+  descripcion            String                   @db.VarChar(500)
+  animal                 animal                   @relation(fields: [idanimal], references: [idanimal], onDelete: NoAction, onUpdate: NoAction)
+  registroatencionmedica registroatencionmedica[]
+}
+
+model hogar {
+  idhogar               Int                   @id
+  nombre                String                @db.VarChar(100)
+  observacionesexterior String                @db.VarChar(500)
+  proteccionexterior    String                @db.VarChar(255)
+  postulaciontransito   postulaciontransito[]
+  solicitudadopcion     solicitudadopcion[]
+}
+
+model insumo {
+  idinsumo             Int                    @id
+  nombre               String                 @db.VarChar(100)
+  descripcion          String                 @db.VarChar(500)
+  stock                Int
+  fechavencimiento     DateTime               @db.Date
+  alimento             alimento?
+  medicamento          medicamento?
+  movimientoinventario movimientoinventario[]
+}
+
+model localidad {
+  idlocalidad      Int                @id
+  nombre           String             @db.VarChar(100)
+  direccionpersona direccionpersona[]
+}
+
+model medicamento {
+  idinsumo          Int    @id
+  numerolote        String @db.VarChar(50)
+  concentracion     String @db.VarChar(50)
+  viaadministracion String @db.VarChar(50)
+  insumo            insumo @relation(fields: [idinsumo], references: [idinsumo], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model movimientoinventario {
+  idmovimiento Int      @id
+  idinsumo     Int
+  idpersona    Int
+  tipo         String   @db.VarChar(50)
+  cantidad     Int
+  fecha        DateTime @db.Date
+  motivo       String   @db.VarChar(255)
+  insumo       insumo   @relation(fields: [idinsumo], references: [idinsumo], onDelete: NoAction, onUpdate: NoAction)
+  persona      persona  @relation(fields: [idpersona], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model permiso {
+  idpermiso  Int          @id
+  idrecurso  Int
+  idaccion   Int
+  accion     accion       @relation(fields: [idaccion], references: [idaccion], onDelete: NoAction, onUpdate: NoAction)
+  recurso    recurso      @relation(fields: [idrecurso], references: [idrecurso], onDelete: NoAction, onUpdate: NoAction)
+  rolpermiso rolpermiso[]
+}
+
+model persona {
+  idpersona                                                        Int                    @id
+  nombrecompleto                                                   String                 @db.VarChar(150)
+  email                                                            String                 @db.VarChar(255)
+  dni                                                              Int
+  telefono                                                         String                 @db.VarChar(20)
+  usuarioinstagram                                                 String                 @db.VarChar(50)
+  usuariofacebook                                                  String                 @db.VarChar(100)
+  fechanac                                                         DateTime               @db.Date
+  fechaalta                                                        DateTime               @db.Timestamp(6)
+  contrase_a                                                       String                 @map("contraseña") @db.VarChar(255)
+  adoptante                                                        adoptante?
+  direccionpersona                                                 direccionpersona[]
+  donacion                                                         donacion[]
+  movimientoinventario                                             movimientoinventario[]
+  personarol                                                       personarol[]
+  postulaciontransito_postulaciontransito_idpersonaaproboTopersona postulaciontransito[]  @relation("postulaciontransito_idpersonaaproboTopersona")
+  postulaciontransito_postulaciontransito_idpostulanteTopersona    postulaciontransito[]  @relation("postulaciontransito_idpostulanteTopersona")
+  publicacion_publicacion_idpersonaaproboTopersona                 publicacion[]          @relation("publicacion_idpersonaaproboTopersona")
+  publicacion_publicacion_idpersonapublicoTopersona                publicacion[]          @relation("publicacion_idpersonapublicoTopersona")
+  seguimientoadopcion                                              seguimientoadopcion[]
+  solicitudadopcion_solicitudadopcion_idpersonaaproboTopersona     solicitudadopcion[]    @relation("solicitudadopcion_idpersonaaproboTopersona")
+  solicitudadopcion_solicitudadopcion_idsolicitanteTopersona       solicitudadopcion[]    @relation("solicitudadopcion_idsolicitanteTopersona")
+  transitante                                                      transitante?
+}
+
+model personarol {
+  idpersonarol Int     @id
+  idrol        Int
+  idpersona    Int
+  persona      persona @relation(fields: [idpersona], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
+  rol          rol     @relation(fields: [idrol], references: [idrol], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model postulaciontransito {
+  idpostulacion                                        Int      @id
+  idpostulante                                         Int
+  idpersonaaprobo                                      Int
+  idhogar                                              Int
+  fechapostulacion                                     DateTime @db.Timestamp(6)
+  estado                                               String   @db.VarChar(30)
+  rutaformulario                                       String   @db.VarChar(255)
+  hogar                                                hogar    @relation(fields: [idhogar], references: [idhogar], onDelete: NoAction, onUpdate: NoAction)
+  persona_postulaciontransito_idpersonaaproboTopersona persona  @relation("postulaciontransito_idpersonaaproboTopersona", fields: [idpersonaaprobo], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
+  persona_postulaciontransito_idpostulanteTopersona    persona  @relation("postulaciontransito_idpostulanteTopersona", fields: [idpostulante], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model profesionalveterinario {
+  idresponsable Int         @id
+  especialidad  String      @db.VarChar(100)
+  responsable   responsable @relation(fields: [idresponsable], references: [idresponsable], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model publicacion {
+  idpublicacion                                 Int      @id
+  idpersonapublico                              Int
+  idpersonaaprobo                               Int
+  idanimal                                      Int
+  descripcion                                   String   @db.VarChar(500)
+  zona                                          String   @db.VarChar(100)
+  fecha                                         DateTime @db.Date
+  contacto                                      String   @db.VarChar(150)
+  aprobado                                      Boolean
+  resuelto                                      Boolean
+  animal                                        animal   @relation(fields: [idanimal], references: [idanimal], onDelete: NoAction, onUpdate: NoAction)
+  persona_publicacion_idpersonaaproboTopersona  persona  @relation("publicacion_idpersonaaproboTopersona", fields: [idpersonaaprobo], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
+  persona_publicacion_idpersonapublicoTopersona persona  @relation("publicacion_idpersonapublicoTopersona", fields: [idpersonapublico], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model recurso {
+  idrecurso Int       @id
+  nombre    String    @db.VarChar(100)
+  permiso   permiso[]
+}
+
+model registroatencionmedica {
+  idregistro              Int                      @id
+  idhistorial             Int
+  idresponsable           Int
+  fecha                   DateTime                 @db.Timestamp(6)
+  historialclinico        historialclinico         @relation(fields: [idhistorial], references: [idhistorial], onDelete: NoAction, onUpdate: NoAction)
+  responsable             responsable              @relation(fields: [idresponsable], references: [idresponsable], onDelete: NoAction, onUpdate: NoAction)
+  registrodesparasitacion registrodesparasitacion?
+  registroestudio         registroestudio?
+  registrotratamiento     registrotratamiento?
+  registrovacuna          registrovacuna?
+}
+
+model registrodesparasitacion {
+  idregistro             Int                    @id
+  producto               String                 @db.VarChar(150)
+  dosis                  String                 @db.VarChar(50)
+  fechaaplicacion        DateTime               @db.Date
+  proximaaplicacion      DateTime               @db.Date
+  registroatencionmedica registroatencionmedica @relation(fields: [idregistro], references: [idregistro], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model registroestudio {
+  idregistro             Int                    @id
+  tipo                   String                 @db.VarChar(50)
+  fecha                  DateTime               @db.Date
+  resultado              String                 @db.VarChar(500)
+  archivo                String                 @db.VarChar(255)
+  registroatencionmedica registroatencionmedica @relation(fields: [idregistro], references: [idregistro], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model registrotratamiento {
+  idregistro             Int                    @id
+  descripcion            String                 @db.VarChar(500)
+  fechainicio            DateTime               @db.Date
+  fechafin               DateTime               @db.Date
+  medicacion             String                 @db.VarChar(200)
+  archivo                String                 @db.VarChar(255)
+  registroatencionmedica registroatencionmedica @relation(fields: [idregistro], references: [idregistro], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model registrovacuna {
+  idregistro             Int                    @id
+  fechaaplicacion        DateTime               @db.Date
+  fechavencimiento       DateTime               @db.Date
+  idvacuna               Int
+  registroatencionmedica registroatencionmedica @relation(fields: [idregistro], references: [idregistro], onDelete: NoAction, onUpdate: NoAction)
+  vacuna                 vacuna                 @relation(fields: [idvacuna], references: [idvacuna], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model responsable {
+  idresponsable          Int                      @id
+  nombre                 String                   @db.VarChar(100)
+  telefono               String                   @db.VarChar(20)
+  email                  String                   @db.VarChar(255)
+  fecha                  DateTime                 @db.Timestamp(6)
+  profesionalveterinario profesionalveterinario?
+  registroatencionmedica registroatencionmedica[]
+  veterinaria            veterinaria?
+}
+
+model rol {
+  idrol      Int          @id
+  rol        String       @db.VarChar(50)
+  personarol personarol[]
+  rolpermiso rolpermiso[]
+}
+
+model rolpermiso {
+  idrolpermiso Int     @id
+  idrol        Int
+  idpermiso    Int
+  permiso      permiso @relation(fields: [idpermiso], references: [idpermiso], onDelete: NoAction, onUpdate: NoAction)
+  rol          rol     @relation(fields: [idrol], references: [idrol], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model seguimientoadopcion {
+  idseguimiento Int       @id
+  idadopcion    Int
+  idresponsable Int
+  fecha         DateTime  @db.Date
+  observaciones String    @db.VarChar(500)
+  archivo       archivo[]
+  adopcion      adopcion  @relation(fields: [idadopcion], references: [idadopcion], onDelete: NoAction, onUpdate: NoAction)
+  persona       persona   @relation(fields: [idresponsable], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model servicioofrecido {
+  idservicio          Int                   @id
+  servicio            String                @db.VarChar(100)
+  veterinariaservicio veterinariaservicio[]
+}
+
+model solicitudadopcion {
+  idsolicituda                                       Int      @id
+  idhogar                                            Int
+  idsolicitante                                      Int
+  idpersonaaprobo                                    Int
+  idanimal                                           Int
+  estado                                             String   @db.VarChar(30)
+  rutaformulario                                     String   @db.VarChar(255)
+  fechaaprobacion                                    DateTime @db.Date
+  animal                                             animal   @relation(fields: [idanimal], references: [idanimal], onDelete: NoAction, onUpdate: NoAction)
+  hogar                                              hogar    @relation(fields: [idhogar], references: [idhogar], onDelete: NoAction, onUpdate: NoAction)
+  persona_solicitudadopcion_idpersonaaproboTopersona persona  @relation("solicitudadopcion_idpersonaaproboTopersona", fields: [idpersonaaprobo], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
+  persona_solicitudadopcion_idsolicitanteTopersona   persona  @relation("solicitudadopcion_idsolicitanteTopersona", fields: [idsolicitante], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model tipogasto {
+  idtipogasto Int     @id
+  nombre      String  @db.VarChar(100)
+  gasto       gasto[]
+}
+
+model transitante {
+  idpersona           Int               @id
+  idestadot           Int
+  disponibilidad      String            @db.VarChar(100)
+  capacidaddisponible Int
+  experienciaprevia   String            @db.VarChar(500)
+  estadotransitante   estadotransitante @relation(fields: [idestadot], references: [idestadot], onDelete: NoAction, onUpdate: NoAction)
+  persona             persona           @relation(fields: [idpersona], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
+  transito            transito[]
+}
+
+model transito {
+  idtransito    Int         @id
+  idanimal      Int
+  idtransitante Int
+  fechainicio   DateTime    @db.Date
+  fechafin      DateTime    @db.Date
+  estado        String      @db.VarChar(30)
+  animal        animal      @relation(fields: [idanimal], references: [idanimal], onDelete: NoAction, onUpdate: NoAction)
+  transitante   transitante @relation(fields: [idtransitante], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model vacuna {
+  idvacuna       Int              @id
+  nombre         String           @db.VarChar(100)
+  registrovacuna registrovacuna[]
+}
+
+model veterinaria {
+  idresponsable       Int                   @id
+  direccion           String                @db.VarChar(200)
+  responsable         responsable           @relation(fields: [idresponsable], references: [idresponsable], onDelete: NoAction, onUpdate: NoAction)
+  veterinariaservicio veterinariaservicio[]
+}
+
+model veterinariaservicio {
+  idvetserv        Int              @id
+  idveterinaria    Int
+  idservicio       Int
+  servicioofrecido servicioofrecido @relation(fields: [idservicio], references: [idservicio], onDelete: NoAction, onUpdate: NoAction)
+  veterinaria      veterinaria      @relation(fields: [idveterinaria], references: [idresponsable], onDelete: NoAction, onUpdate: NoAction)
 }
