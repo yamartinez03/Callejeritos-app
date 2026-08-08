@@ -38,6 +38,8 @@ Y completá la URL de conexión a la base local:
 ```text
 DATABASE_URL="postgresql://user:password@localhost:5432/mydb?schema=public"
 ```
+> ***IMPORTANTE:*** para la contraseña, los caracteres especiales tienen que ser codificados con porcentajes, por ejemplo el signo de exclamación ! es %21. Si no se codifican la migración tira una excepción.
+
 
 > Asegurarse de tener PostgreSQL corriendo localmente y de que la base de datos (`mydb` en el ejemplo) ya exista, o crearla antes de continuar.
 
