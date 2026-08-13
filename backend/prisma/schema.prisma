@@ -188,16 +188,14 @@ model permiso {
 }
 
 model persona {
-  idpersona                                                        Int                    @id
+  idpersona                                                        Int                    @id @default(autoincrement())
   nombrecompleto                                                   String                 @db.VarChar(150)
   email                                                            String                 @db.VarChar(255)
   dni                                                              Int
-  telefono                                                         String                 @db.VarChar(20)
-  usuarioinstagram                                                 String                 @db.VarChar(50)
-  usuariofacebook                                                  String                 @db.VarChar(100)
-  fechanac                                                         DateTime               @db.Date
-  fechaalta                                                        DateTime               @db.Timestamp(6)
-  contrase_a                                                       String                 @map("contraseña") @db.VarChar(255)
+  telefono                                                         String?                 @db.VarChar(20)
+  usuarioinstagram                                                 String?                 @db.VarChar(50)
+  usuariofacebook                                                  String?                 @db.VarChar(100)
+  fechanac                                                         DateTime?               @db.Date
   adoptante                                                        adoptante?
   direccionpersona                                                 direccionpersona[]
   donacion                                                         donacion[]
@@ -211,6 +209,8 @@ model persona {
   solicitudadopcion_solicitudadopcion_idpersonaaproboTopersona     solicitudadopcion[]    @relation("solicitudadopcion_idpersonaaproboTopersona")
   solicitudadopcion_solicitudadopcion_idsolicitanteTopersona       solicitudadopcion[]    @relation("solicitudadopcion_idsolicitanteTopersona")
   transitante                                                      transitante?
+  usuario                                                          usuario?
+  socio                                                            socio?
 }
 
 model personarol {
@@ -243,16 +243,17 @@ model profesionalveterinario {
 model publicacion {
   idpublicacion                                 Int      @id
   idpersonapublico                              Int
-  idpersonaaprobo                               Int
-  idanimal                                      Int
+  idpersonaaprobo                               Int?
+  idanimal                                      Int?
+  foto                                          String?   @db.VarChar(255)
   descripcion                                   String   @db.VarChar(500)
   zona                                          String   @db.VarChar(100)
   fecha                                         DateTime @db.Date
   contacto                                      String   @db.VarChar(150)
   aprobado                                      Boolean
   resuelto                                      Boolean
-  animal                                        animal   @relation(fields: [idanimal], references: [idanimal], onDelete: NoAction, onUpdate: NoAction)
-  persona_publicacion_idpersonaaproboTopersona  persona  @relation("publicacion_idpersonaaproboTopersona", fields: [idpersonaaprobo], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
+  animal                                        animal?   @relation(fields: [idanimal], references: [idanimal], onDelete: NoAction, onUpdate: NoAction)
+  persona_publicacion_idpersonaaproboTopersona  persona?  @relation("publicacion_idpersonaaproboTopersona", fields: [idpersonaaprobo], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
   persona_publicacion_idpersonapublicoTopersona persona  @relation("publicacion_idpersonapublicoTopersona", fields: [idpersonapublico], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
 }
 
@@ -355,18 +356,24 @@ model servicioofrecido {
   veterinariaservicio veterinariaservicio[]
 }
 
+model socio {
+  idpersona  Int      @id
+  fechaalta  DateTime @db.Date
+  persona    persona  @relation(fields: [idpersona], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
+}
+
 model solicitudadopcion {
   idsolicituda                                       Int      @id
   idhogar                                            Int
   idsolicitante                                      Int
-  idpersonaaprobo                                    Int
+  idpersonaaprobo                                    Int?
   idanimal                                           Int
   estado                                             String   @db.VarChar(30)
   rutaformulario                                     String   @db.VarChar(255)
-  fechaaprobacion                                    DateTime @db.Date
+  fechaaprobacion                                    DateTime? @db.Date
   animal                                             animal   @relation(fields: [idanimal], references: [idanimal], onDelete: NoAction, onUpdate: NoAction)
   hogar                                              hogar    @relation(fields: [idhogar], references: [idhogar], onDelete: NoAction, onUpdate: NoAction)
-  persona_solicitudadopcion_idpersonaaproboTopersona persona  @relation("solicitudadopcion_idpersonaaproboTopersona", fields: [idpersonaaprobo], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
+  persona_solicitudadopcion_idpersonaaproboTopersona persona?  @relation("solicitudadopcion_idpersonaaproboTopersona", fields: [idpersonaaprobo], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
   persona_solicitudadopcion_idsolicitanteTopersona   persona  @relation("solicitudadopcion_idsolicitanteTopersona", fields: [idsolicitante], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
 }
 
@@ -377,7 +384,7 @@ model tipogasto {
 }
 
 model transitante {
-  idpersona           Int               @id
+  idpersona           Int               @id @default(autoincrement())
   idestadot           Int
   disponibilidad      String            @db.VarChar(100)
   capacidaddisponible Int
@@ -392,10 +399,18 @@ model transito {
   idanimal      Int
   idtransitante Int
   fechainicio   DateTime    @db.Date
-  fechafin      DateTime    @db.Date
+  fechafin      DateTime?    @db.Date
   estado        String      @db.VarChar(30)
   animal        animal      @relation(fields: [idanimal], references: [idanimal], onDelete: NoAction, onUpdate: NoAction)
   transitante   transitante @relation(fields: [idtransitante], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model usuario {
+  idusuario     Int    @id @default(autoincrement())
+  idpersona     Int    @unique
+  nombreusuario String @db.VarChar(50)
+  contrase_a    String @map("contraseña") @db.VarChar(255)
+  persona       persona @relation(fields: [idpersona], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model vacuna {
