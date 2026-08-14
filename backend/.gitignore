@@ -7,3 +7,6 @@ node_modules
 # Archivos de pnpm
 pnpm-lock.yaml
 pnpm-workspace.yaml
+
+#config de contenedor Docker local
+docker-compose.yml
