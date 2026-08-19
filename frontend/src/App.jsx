@@ -1,4 +1,11 @@
 import { Button } from './components/ui/button'
+import { useState } from 'react'
+import reactLogo from './assets/react.svg'
+import viteLogo from './assets/vite.svg'
+import heroImg from './assets/hero.png'
+import './App.css'
+import { Routes,Route } from 'react-router-dom'
+import GastosPage  from './pages/gastos/GastosPage'
 
 function App() {
   return (
@@ -19,7 +26,11 @@ function App() {
         <p className="text-gray-500 mb-8">Gestión integral de animales, tránsitos y adopciones.</p>
 
       </main>
+    <Routes>
+      <Route path="/gastos" element={< GastosPage/>}/>
+    </Routes>
     </div>
+    
   )
 }
 
