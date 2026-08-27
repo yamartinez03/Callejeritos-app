@@ -6,14 +6,14 @@ import DialogNuevoInsumo from "./components/DialogNuevoInsumo";
 import DialogMovimiento from "./components/DialogMovimiento";
 
 //cosas que me faltan revisar: el input de agregar insumo por tipo (alimento, medicamneto)
-// y como manejo los movimientos de entrada y salida
+
 // Datos de prueba hasta conectar con el backend
 const insumosMock = [
   {
     id: 1,
     nombre: "Amoxicilina",
     descripcion: "Antibiótico para mascotas",
-    tipo: "medicamento",
+    tipo: "medicamento", // como en schema hay dos bool de aliemento y medicamento, aqui solo se usa un string para simplificar, se vera en el backend como se maneja
     stock: 5,
     fechaVencimiento: "2026-12-01",
     // atributos de medicamento
@@ -32,7 +32,7 @@ const insumosMock = [
     marca: "Royal Canin",
     tipoalimento: "seco",
     peso: "10kg",
-    especieDestino: "Perros adultos",
+    especieDestino: "Perros adultos", //debo devolver la especie destino no el id, lo hare en el back
   },
   {
     id: 3,
