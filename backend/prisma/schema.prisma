@@ -1,6 +1,6 @@
 generator client {
-  provider = "prisma-client"
-  output = "../generated/prisma"
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
   moduleFormat = "cjs"
 }
 
@@ -8,428 +8,699 @@ datasource db {
   provider = "postgresql"
 }
 
-model accion {
-  idaccion Int       @id
-  nombre   String    @db.VarChar(100)
-  permiso  permiso[]
+// ENUMERATIVAS
+
+enum SexoAnimal {
+  MACHO
+  HEMBRA
 }
 
-model adopcion {
-  idadopcion          Int                   @id
-  idanimal            Int
-  idadoptante         Int
-  fechaentrega        DateTime              @db.Date
-  observaciones       String                @db.VarChar(500)
-  adoptante           adoptante             @relation(fields: [idadoptante], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
-  animal              animal                @relation(fields: [idanimal], references: [idanimal], onDelete: NoAction, onUpdate: NoAction)
-  seguimientoadopcion seguimientoadopcion[]
+enum EstadoAnimal {
+  AVISTADO
+  EN_TRANSITO
+  EN_ADOPCION
+  ADOPTADO
+  RESCATADO
+  FALLECIDO
 }
 
-model adoptante {
+enum EstadoUsuario {
+  ACTIVO
+  INACTIVO
+  BAJA
+}
+
+enum EstadoSolicitud {
+  PENDIENTE
+  APROBADA
+  RECHAZADA
+//  CANCELADA <- a revisar si damos la opción al adoptante de cancelarla
+}
+
+enum EstadoTransito {
+  ACTIVO
+  FINALIZADO
+  CANCELADO
+}
+
+enum TipoMovimientoInventario {
+  ENTRADA
+  SALIDA
+}
+
+enum TipoAlimento {
+  SECO
+  HUMEDO
+  FRESCO
+}
+
+enum TipoAtencionMedica {
+  VACUNA
+  DESPARASITACION
+  ESTUDIO
+  TRATAMIENTO
+}
+
+enum TipoResponsable {
+  VETERINARIA
+  PROFESIONAL
+}
+
+enum ViaAdminMedicamento {
+  ORAL
+  INTRAVENOSA
+  CUTANEA
+  SUBCUTANEA
+}
+
+// MODELOS
+// Agrego timestamps de createdAt y updatedAt a todos los modelos
+// Agrego reglas de integridad referencial para la eliminación de registros
+// NOTA: revisar las tabulaciones EstadoAdoptante y EstadoTransitante para corroborar que se justifique
+
+model Accion {
+  idaccion  Int       @id @default(autoincrement())
+  nombre    String    @db.VarChar(100)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  permiso   Permiso[]
+
+  @@map("accion")
+}
+
+model Adopcion {
+  idadopcion    Int                   @id @default(autoincrement())
+  idanimal      Int
+  idadoptante   Int
+  fechaentrega  DateTime              @db.Date
+  observaciones String                @db.VarChar(500)
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  adoptante     Adoptante             @relation(fields: [idadoptante], references: [idpersona], onDelete: Restrict, onUpdate: Cascade)
+  animal        Animal                @relation(fields: [idanimal], references: [idanimal], onDelete: Restrict, onUpdate: Cascade)
+  seguimientoadopcion SeguimientoAdopcion[]
+
+  @@index([fechaentrega])
+  @@map("adopcion")
+}
+
+model Adoptante {
   idpersona       Int             @id
   idestadoa       Int
-  adopcion        adopcion[]
-  estadoadoptante estadoadoptante @relation(fields: [idestadoa], references: [idestadoa], onDelete: NoAction, onUpdate: NoAction)
-  persona         persona         @relation(fields: [idpersona], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  adopcion        Adopcion[]
+  estadoadoptante EstadoAdoptante @relation(fields: [idestadoa], references: [idestadoa], onDelete: Restrict, onUpdate: Cascade)
+  usuario         Usuario         @relation(fields: [idpersona], references: [idpersona], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("adoptante")
 }
 
-model alimento {
+model Alimento {
   idinsumo      Int           @id
   idespecie     Int
   marca         String        @db.VarChar(100)
-  tipoalimento  String        @db.VarChar(50)
+  tipoalimento  TipoAlimento  
   peso          Int
-  especieanimal especieanimal @relation(fields: [idespecie], references: [idespecie], onDelete: NoAction, onUpdate: NoAction)
-  insumo        insumo        @relation(fields: [idinsumo], references: [idinsumo], onDelete: NoAction, onUpdate: NoAction)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  especieanimal EspecieAnimal @relation(fields: [idespecie], references: [idespecie], onDelete: Restrict, onUpdate: Cascade)
+  insumo        Insumo        @relation(fields: [idinsumo], references: [idinsumo], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("alimento")
 }
 
-model animal {
-  idanimal          Int                 @id
+model Animal {
+  idanimal          Int                 @id @default(autoincrement())
   idespecie         Int
   nombre            String              @db.VarChar(100)
-  sexo              String              @db.VarChar(10)
+  sexo              SexoAnimal
   edadestimada      Int
   colorpelaje       String              @db.VarChar(50)
   peso              Float
   castrado          Boolean
   lugarorigen       String              @db.VarChar(150)
-  estado            String              @db.VarChar(30)
+  estado            EstadoAnimal
   fechaingreso      DateTime            @db.Date
   lactante          Boolean
-  adopcion          adopcion[]
-  especieanimal     especieanimal       @relation(fields: [idespecie], references: [idespecie], onDelete: NoAction, onUpdate: NoAction)
-  gasto             gasto[]
-  historialclinico  historialclinico[]
-  publicacion       publicacion[]
-  solicitudadopcion solicitudadopcion[]
-  transito          transito[]
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  adopcion          Adopcion[]
+  especieanimal     EspecieAnimal       @relation(fields: [idespecie], references: [idespecie], onDelete: Restrict, onUpdate: Cascade)
+  gasto             Gasto[]
+  historialclinico  HistorialClinico[]
+  publicacion       Publicacion[]
+  solicitudadopcion SolicitudAdopcion[]
+  transito          Transito[]
+
+  @@index([estado])
+  @@map("animal")
 }
 
-model archivo {
-  idarchivo           Int                 @id
+model Archivo {
+  idarchivo           Int                 @id @default(autoincrement())
   idseguimiento       Int
   archivo             String              @db.VarChar(255)
-  seguimientoadopcion seguimientoadopcion @relation(fields: [idseguimiento], references: [idseguimiento], onDelete: NoAction, onUpdate: NoAction)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  seguimientoadopcion SeguimientoAdopcion @relation(fields: [idseguimiento], references: [idseguimiento], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("archivo")
 }
 
-model direccionpersona {
-  iddirper    Int       @id
+model DireccionPersona {
+  iddirper    Int       @id @default(autoincrement())
   idpersona   Int
   idlocalidad Int
   calle       String    @db.VarChar(150)
   numero      String    @db.VarChar(10)
-  localidad   localidad @relation(fields: [idlocalidad], references: [idlocalidad], onDelete: NoAction, onUpdate: NoAction)
-  persona     persona   @relation(fields: [idpersona], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  localidad   Localidad @relation(fields: [idlocalidad], references: [idlocalidad], onDelete: Restrict, onUpdate: Cascade)
+  usuario     Usuario   @relation(fields: [idpersona], references: [idpersona], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("direccionpersona")
 }
 
-model donacion {
-  iddonacion Int      @id
+model Donacion {
+  iddonacion Int      @id @default(autoincrement())
   idpersona  Int
-  monto      Float
+  monto      Decimal  @db.Decimal(12, 2)
   fecha      DateTime @db.Date
   canal      String   @db.VarChar(50)
-  persona    persona  @relation(fields: [idpersona], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  usuario    Usuario  @relation(fields: [idpersona], references: [idpersona], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([fecha])
+  @@map("donacion")
 }
 
-model especieanimal {
-  idespecie Int        @id
+model EspecieAnimal {
+  idespecie Int        @id @default(autoincrement())
   nombre    String     @db.VarChar(100)
-  alimento  alimento[]
-  animal    animal[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  alimento  Alimento[]
+  animal    Animal[]
+
+  @@map("especieanimal")
 }
 
-model estadoadoptante {
-  idestadoa Int         @id
+model EstadoAdoptante {
+  idestadoa Int         @id @default(autoincrement())
   estado    String      @db.VarChar(30)
-  adoptante adoptante[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  adoptante Adoptante[]
+
+  @@map("estadoadoptante")
 }
 
-model estadotransitante {
-  idestadot   Int           @id
+model EstadoTransitante {
+  idestadot   Int           @id @default(autoincrement())
   estado      String        @db.VarChar(30)
-  transitante transitante[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  transitante Transitante[]
+
+  @@map("estadotransitante")
 }
 
-model gasto {
-  idgasto     Int       @id
+model Gasto {
+  idgasto     Int       @id @default(autoincrement())
   idanimal    Int
   idtipogasto Int
   descripcion String    @db.VarChar(500)
-  monto       Float
+  monto       Decimal   @db.Decimal(12, 2)
   fecha       DateTime  @db.Date
   comprobante String    @db.VarChar(255)
-  reintegrado Boolean
-  animal      animal    @relation(fields: [idanimal], references: [idanimal], onDelete: NoAction, onUpdate: NoAction)
-  tipogasto   tipogasto @relation(fields: [idtipogasto], references: [idtipogasto], onDelete: NoAction, onUpdate: NoAction)
+  reintegrado Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  animal      Animal    @relation(fields: [idanimal], references: [idanimal], onDelete: Restrict, onUpdate: Cascade)
+  tipogasto   TipoGasto @relation(fields: [idtipogasto], references: [idtipogasto], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([fecha])
+  @@map("gasto")
 }
 
-model historialclinico {
-  idhistorial            Int                      @id
+model HistorialClinico {
+  idhistorial            Int                       @id @default(autoincrement())
   idanimal               Int
-  fecha                  DateTime                 @db.Timestamp(6)
-  descripcion            String                   @db.VarChar(500)
-  animal                 animal                   @relation(fields: [idanimal], references: [idanimal], onDelete: NoAction, onUpdate: NoAction)
-  registroatencionmedica registroatencionmedica[]
+  fecha                  DateTime                  @db.Timestamp(6)
+  descripcion            String                    @db.VarChar(500)
+  createdAt              DateTime                  @default(now())
+  updatedAt              DateTime                  @updatedAt
+  animal                 Animal                    @relation(fields: [idanimal], references: [idanimal], onDelete: Restrict, onUpdate: Cascade)
+  registroatencionmedica RegistroAtencionMedica[]
+
+  @@index([fecha])
+  @@map("historialclinico")
 }
 
-model hogar {
-  idhogar               Int                   @id
+model Hogar {
+  idhogar               Int                   @id @default(autoincrement())
   nombre                String                @db.VarChar(100)
   observacionesexterior String                @db.VarChar(500)
   proteccionexterior    String                @db.VarChar(255)
-  postulaciontransito   postulaciontransito[]
-  solicitudadopcion     solicitudadopcion[]
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  postulaciontransito   PostulacionTransito[]
+  solicitudadopcion     SolicitudAdopcion[]
+
+  @@map("hogar")
 }
 
-model insumo {
-  idinsumo             Int                    @id
+model Insumo {
+  idinsumo             Int                    @id @default(autoincrement())
   nombre               String                 @db.VarChar(100)
   descripcion          String                 @db.VarChar(500)
   stock                Int
   fechavencimiento     DateTime               @db.Date
-  alimento             alimento?
-  medicamento          medicamento?
-  movimientoinventario movimientoinventario[]
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  alimento             Alimento?
+  medicamento          Medicamento?
+  movimientoinventario MovimientoInventario[]
+
+  @@index([fechavencimiento])
+  @@map("insumo")
 }
 
-model localidad {
-  idlocalidad      Int                @id
+model Localidad {
+  idlocalidad      Int                @id @default(autoincrement())
   nombre           String             @db.VarChar(100)
-  direccionpersona direccionpersona[]
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  direccionpersona DireccionPersona[]
+
+  @@map("localidad")
 }
 
-model medicamento {
-  idinsumo          Int    @id
-  numerolote        String @db.VarChar(50)
-  concentracion     String @db.VarChar(50)
-  viaadministracion String @db.VarChar(50)
-  insumo            insumo @relation(fields: [idinsumo], references: [idinsumo], onDelete: NoAction, onUpdate: NoAction)
+model Medicamento {
+  idinsumo          Int      @id
+  numerolote        String   @db.VarChar(50)
+  concentracion     String   @db.VarChar(50)
+  viaadministracion ViaAdminMedicamento
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  insumo            Insumo   @relation(fields: [idinsumo], references: [idinsumo], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("medicamento")
 }
 
-model movimientoinventario {
-  idmovimiento Int      @id
+model MovimientoInventario {
+  idmovimiento Int                      @id @default(autoincrement())
   idinsumo     Int
   idpersona    Int
-  tipo         String   @db.VarChar(50)
+  tipo         TipoMovimientoInventario
   cantidad     Int
-  fecha        DateTime @db.Date
-  motivo       String   @db.VarChar(255)
-  insumo       insumo   @relation(fields: [idinsumo], references: [idinsumo], onDelete: NoAction, onUpdate: NoAction)
-  persona      persona  @relation(fields: [idpersona], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
+  fecha        DateTime                 @db.Date
+  motivo       String                   @db.VarChar(255)
+  createdAt    DateTime                 @default(now())
+  updatedAt    DateTime                 @updatedAt
+  insumo       Insumo                   @relation(fields: [idinsumo], references: [idinsumo], onDelete: Restrict, onUpdate: Cascade)
+  usuario      Usuario                  @relation(fields: [idpersona], references: [idpersona], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([fecha])
+  @@map("movimientoinventario")
 }
 
-model permiso {
-  idpermiso  Int          @id
+model Permiso {
+  idpermiso  Int          @id @default(autoincrement())
   idrecurso  Int
   idaccion   Int
-  accion     accion       @relation(fields: [idaccion], references: [idaccion], onDelete: NoAction, onUpdate: NoAction)
-  recurso    recurso      @relation(fields: [idrecurso], references: [idrecurso], onDelete: NoAction, onUpdate: NoAction)
-  rolpermiso rolpermiso[]
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  accion     Accion       @relation(fields: [idaccion], references: [idaccion], onDelete: Restrict, onUpdate: Cascade)
+  recurso    Recurso      @relation(fields: [idrecurso], references: [idrecurso], onDelete: Restrict, onUpdate: Cascade)
+  rolpermiso RolPermiso[]
+
+  @@unique([idrecurso, idaccion])
+  @@map("permiso")
 }
 
-model persona {
-  idpersona                                                        Int                    @id @default(autoincrement())
-  nombrecompleto                                                   String                 @db.VarChar(150)
-  email                                                            String                 @db.VarChar(255)
-  dni                                                              Int
-  telefono                                                         String?                 @db.VarChar(20)
-  usuarioinstagram                                                 String?                 @db.VarChar(50)
-  usuariofacebook                                                  String?                 @db.VarChar(100)
-  fechanac                                                         DateTime?               @db.Date
-  adoptante                                                        adoptante?
-  direccionpersona                                                 direccionpersona[]
-  donacion                                                         donacion[]
-  movimientoinventario                                             movimientoinventario[]
-  personarol                                                       personarol[]
-  postulaciontransito_postulaciontransito_idpersonaaproboTopersona postulaciontransito[]  @relation("postulaciontransito_idpersonaaproboTopersona")
-  postulaciontransito_postulaciontransito_idpostulanteTopersona    postulaciontransito[]  @relation("postulaciontransito_idpostulanteTopersona")
-  publicacion_publicacion_idpersonaaproboTopersona                 publicacion[]          @relation("publicacion_idpersonaaproboTopersona")
-  publicacion_publicacion_idpersonapublicoTopersona                publicacion[]          @relation("publicacion_idpersonapublicoTopersona")
-  seguimientoadopcion                                              seguimientoadopcion[]
-  solicitudadopcion_solicitudadopcion_idpersonaaproboTopersona     solicitudadopcion[]    @relation("solicitudadopcion_idpersonaaproboTopersona")
-  solicitudadopcion_solicitudadopcion_idsolicitanteTopersona       solicitudadopcion[]    @relation("solicitudadopcion_idsolicitanteTopersona")
-  transitante                                                      transitante?
-  usuario                                                          usuario?
-  socio                                                            socio?
+/// Modelo fusionado: antes Persona ahora Usuario. El campo
+/// nombreusuario fue eliminado. La PK conserva el
+/// nombre idpersona para no romper todas las FK del schema.
+model Usuario {
+  idpersona        Int       @id @default(autoincrement())
+  nombrecompleto   String    @db.VarChar(150)
+  email            String    @unique @db.VarChar(255)
+  dni              Int       @unique
+  telefono         String?   @db.VarChar(20)
+  usuarioinstagram String?   @db.VarChar(50)
+  usuariofacebook  String?   @db.VarChar(100)
+  fechanac         DateTime? @db.Date
+  // Cambio el nombre del campo contraseña para que no haya conflictos por la ñ
+  passwordHash     String   @map("password_hash") @db.VarChar(255)
+  estado	   EstadoUsuario
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  adoptante               Adoptante?
+  direccionpersona        DireccionPersona[]
+  donacion                Donacion[]
+  movimientoinventario    MovimientoInventario[]
+  personarol              PersonaRol[]
+  postulacionesAprobadas  PostulacionTransito[]  @relation("postulaciontransito_idpersonaaproboTousuario")
+  postulacionesRealizadas PostulacionTransito[]  @relation("postulaciontransito_idpostulanteTousuario")
+  publicacionesAprobadas  Publicacion[]          @relation("publicacion_idpersonaaproboTousuario")
+  publicacionesCreadas    Publicacion[]          @relation("publicacion_idpersonapublicoTousuario")
+  seguimientoadopcion     SeguimientoAdopcion[]
+  solicitudesAprobadas    SolicitudAdopcion[]    @relation("solicitudadopcion_idpersonaaproboTousuario")
+  solicitudesRealizadas   SolicitudAdopcion[]    @relation("solicitudadopcion_idsolicitanteTousuario")
+  transitante             Transitante?
+
+  @@map("usuario")
 }
 
-model personarol {
-  idpersonarol Int     @id
+model PersonaRol {
+  idpersonarol Int      @id @default(autoincrement())
   idrol        Int
   idpersona    Int
-  persona      persona @relation(fields: [idpersona], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
-  rol          rol     @relation(fields: [idrol], references: [idrol], onDelete: NoAction, onUpdate: NoAction)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  usuario      Usuario  @relation(fields: [idpersona], references: [idpersona], onDelete: Cascade, onUpdate: Cascade)
+  rol          Rol      @relation(fields: [idrol], references: [idrol], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([idpersona, idrol])
+  @@map("personarol")
 }
 
-model postulaciontransito {
-  idpostulacion                                        Int      @id
-  idpostulante                                         Int
-  idpersonaaprobo                                      Int
-  idhogar                                              Int
-  fechapostulacion                                     DateTime @db.Timestamp(6)
-  estado                                               String   @db.VarChar(30)
-  rutaformulario                                       String   @db.VarChar(255)
-  hogar                                                hogar    @relation(fields: [idhogar], references: [idhogar], onDelete: NoAction, onUpdate: NoAction)
-  persona_postulaciontransito_idpersonaaproboTopersona persona  @relation("postulaciontransito_idpersonaaproboTopersona", fields: [idpersonaaprobo], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
-  persona_postulaciontransito_idpostulanteTopersona    persona  @relation("postulaciontransito_idpostulanteTopersona", fields: [idpostulante], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
+model PostulacionTransito {
+  idpostulacion    Int                       @id @default(autoincrement())
+  idpostulante     Int
+  idpersonaaprobo  Int
+  idhogar          Int
+  fechapostulacion DateTime                  @db.Timestamp(6)
+  estado           EstadoSolicitud	     @default(PENDIENTE)
+  rutaformulario   String                    @db.VarChar(255)
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+  hogar            Hogar                     @relation(fields: [idhogar], references: [idhogar], onDelete: Restrict, onUpdate: Cascade)
+  aprobadoPor      Usuario                   @relation("postulaciontransito_idpersonaaproboTousuario", fields: [idpersonaaprobo], references: [idpersona], onDelete: Restrict, onUpdate: Cascade)
+  postulante       Usuario                   @relation("postulaciontransito_idpostulanteTousuario", fields: [idpostulante], references: [idpersona], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([estado])
+  @@map("postulaciontransito")
 }
 
-model profesionalveterinario {
+model ProfesionalVeterinario {
   idresponsable Int         @id
   especialidad  String      @db.VarChar(100)
-  responsable   responsable @relation(fields: [idresponsable], references: [idresponsable], onDelete: NoAction, onUpdate: NoAction)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  responsable   Responsable @relation(fields: [idresponsable], references: [idresponsable], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("profesionalveterinario")
 }
 
-model publicacion {
-  idpublicacion                                 Int      @id
-  idpersonapublico                              Int
-  idpersonaaprobo                               Int?
-  idanimal                                      Int?
-  foto                                          String?   @db.VarChar(255)
-  descripcion                                   String   @db.VarChar(500)
-  zona                                          String   @db.VarChar(100)
-  fecha                                         DateTime @db.Date
-  contacto                                      String   @db.VarChar(150)
-  aprobado                                      Boolean
-  resuelto                                      Boolean
-  animal                                        animal?   @relation(fields: [idanimal], references: [idanimal], onDelete: NoAction, onUpdate: NoAction)
-  persona_publicacion_idpersonaaproboTopersona  persona?  @relation("publicacion_idpersonaaproboTopersona", fields: [idpersonaaprobo], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
-  persona_publicacion_idpersonapublicoTopersona persona  @relation("publicacion_idpersonapublicoTopersona", fields: [idpersonapublico], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
+model Publicacion {
+  idpublicacion    Int      @id @default(autoincrement())
+  /// Identificador público no secuencial (evita enumeración/scraping en endpoints públicos) ya que las publicaciones son accesibles para todos
+  uuid             String   @default(uuid()) @unique @db.Uuid
+  idpersonapublico Int? // Opcional porque lo puede publicar un visitante no registrado
+  idpersonaaprobo  Int?
+  idanimal         Int?
+  descripcion      String   @db.VarChar(500)
+  zona             String   @db.VarChar(100)
+  fecha            DateTime @db.Date
+  // Datos opcionales del visitante
+  // Despues hay que expresar la regla de negocio de que si es visitante tiene que haber
+  // al menos un contacto en el back
+  nombreVisitante   String? @db.VarChar(150)
+  emailVisitante    String? @db.VarChar(255)
+  telefonoVisitante String? @db.VarChar(20)
+  // Hash de IP para evitar abuso/spam. Se calcula en el back
+  ipHash 	   String?  @db.VarChar(64)
+  estadoaprobado   EstadoSolicitud  @default(PENDIENTE)
+  resuelto         Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  animal           Animal?  @relation(fields: [idanimal], references: [idanimal], onDelete: SetNull, onUpdate: Cascade)
+  aprobadoPor      Usuario? @relation("publicacion_idpersonaaproboTousuario", fields: [idpersonaaprobo], references: [idpersona], onDelete: SetNull, onUpdate: Cascade)
+  publicadoPor     Usuario?  @relation("publicacion_idpersonapublicoTousuario", fields: [idpersonapublico], references: [idpersona], onDelete: SetNull, onUpdate: Cascade)
+  fotos            Foto[]
+
+  @@index([resuelto])
+  @@index([fecha])
+  @@index([ipHash])
+  @@index([estadoaprobado])
+  @@map("publicacion")
 }
 
-model recurso {
-  idrecurso Int       @id
+// Una publicacion puede tener mas de una foto
+model Foto {
+  idfoto Int	@id @default(autoincrement())
+  idpub  Int
+  ruta   String @db.VarChar(255)
+  pertenecea    Publicacion @relation(fields: [idpub], references: [idpublicacion], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("foto")
+}
+
+model Recurso {
+  idrecurso Int       @id @default(autoincrement())
   nombre    String    @db.VarChar(100)
-  permiso   permiso[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  permiso   Permiso[]
+
+  @@map("recurso")
 }
 
-model registroatencionmedica {
-  idregistro              Int                      @id
-  idhistorial             Int
-  idresponsable           Int
-  fecha                   DateTime                 @db.Timestamp(6)
-  historialclinico        historialclinico         @relation(fields: [idhistorial], references: [idhistorial], onDelete: NoAction, onUpdate: NoAction)
-  responsable             responsable              @relation(fields: [idresponsable], references: [idresponsable], onDelete: NoAction, onUpdate: NoAction)
-  registrodesparasitacion registrodesparasitacion?
-  registroestudio         registroestudio?
-  registrotratamiento     registrotratamiento?
-  registrovacuna          registrovacuna?
+model RegistroAtencionMedica {
+  idregistro              Int                      @id @default(autoincrement())
+  idhistorial              Int
+  idresponsable            Int
+  tipo                     TipoAtencionMedica
+  fecha                    DateTime                 @db.Timestamp(6)
+  createdAt                DateTime                 @default(now())
+  updatedAt                DateTime                 @updatedAt
+  historialclinico         HistorialClinico         @relation(fields: [idhistorial], references: [idhistorial], onDelete: Restrict, onUpdate: Cascade)
+  responsable              Responsable              @relation(fields: [idresponsable], references: [idresponsable], onDelete: Restrict, onUpdate: Cascade)
+  registrodesparasitacion  RegistroDesparasitacion?
+  registroestudio          RegistroEstudio?
+  registrotratamiento      RegistroTratamiento?
+  registrovacuna           RegistroVacuna?
+
+  @@index([fecha])
+  @@map("registroatencionmedica")
 }
 
-model registrodesparasitacion {
-  idregistro             Int                    @id
-  producto               String                 @db.VarChar(150)
-  dosis                  String                 @db.VarChar(50)
-  fechaaplicacion        DateTime               @db.Date
-  proximaaplicacion      DateTime               @db.Date
-  registroatencionmedica registroatencionmedica @relation(fields: [idregistro], references: [idregistro], onDelete: NoAction, onUpdate: NoAction)
+model RegistroDesparasitacion {
+  idregistro            Int                    @id
+  producto              String                 @db.VarChar(150)
+  dosis                 String                 @db.VarChar(50)
+  fechaaplicacion       DateTime               @db.Date
+  proximaaplicacion     DateTime               @db.Date
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  registroatencionmedica RegistroAtencionMedica @relation(fields: [idregistro], references: [idregistro], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("registrodesparasitacion")
 }
 
-model registroestudio {
+model RegistroEstudio {
   idregistro             Int                    @id
   tipo                   String                 @db.VarChar(50)
   fecha                  DateTime               @db.Date
   resultado              String                 @db.VarChar(500)
   archivo                String                 @db.VarChar(255)
-  registroatencionmedica registroatencionmedica @relation(fields: [idregistro], references: [idregistro], onDelete: NoAction, onUpdate: NoAction)
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+  registroatencionmedica RegistroAtencionMedica @relation(fields: [idregistro], references: [idregistro], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("registroestudio")
 }
 
-model registrotratamiento {
+model RegistroTratamiento {
   idregistro             Int                    @id
   descripcion            String                 @db.VarChar(500)
   fechainicio            DateTime               @db.Date
   fechafin               DateTime               @db.Date
   medicacion             String                 @db.VarChar(200)
   archivo                String                 @db.VarChar(255)
-  registroatencionmedica registroatencionmedica @relation(fields: [idregistro], references: [idregistro], onDelete: NoAction, onUpdate: NoAction)
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+  registroatencionmedica RegistroAtencionMedica @relation(fields: [idregistro], references: [idregistro], onDelete: Cascade, onUpdate: Cascade)
+
+  @@map("registrotratamiento")
 }
 
-model registrovacuna {
+model RegistroVacuna {
   idregistro             Int                    @id
   fechaaplicacion        DateTime               @db.Date
   fechavencimiento       DateTime               @db.Date
   idvacuna               Int
-  registroatencionmedica registroatencionmedica @relation(fields: [idregistro], references: [idregistro], onDelete: NoAction, onUpdate: NoAction)
-  vacuna                 vacuna                 @relation(fields: [idvacuna], references: [idvacuna], onDelete: NoAction, onUpdate: NoAction)
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+  registroatencionmedica RegistroAtencionMedica @relation(fields: [idregistro], references: [idregistro], onDelete: Cascade, onUpdate: Cascade)
+  vacuna                 Vacuna                 @relation(fields: [idvacuna], references: [idvacuna], onDelete: Restrict, onUpdate: Cascade)
+
+  @@map("registrovacuna")
 }
 
-model responsable {
-  idresponsable          Int                      @id
+model Responsable {
+  idresponsable          Int                      @id @default(autoincrement())
   nombre                 String                   @db.VarChar(100)
   telefono               String                   @db.VarChar(20)
-  email                  String                   @db.VarChar(255)
+  email                  String                   @unique @db.VarChar(255)
   fecha                  DateTime                 @db.Timestamp(6)
-  profesionalveterinario profesionalveterinario?
-  registroatencionmedica registroatencionmedica[]
-  veterinaria            veterinaria?
+  tipo                   TipoResponsable
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+  profesionalveterinario ProfesionalVeterinario?
+  registroatencionmedica RegistroAtencionMedica[]
+  veterinaria            Veterinaria?
+
+  @@map("responsable")
 }
 
-model rol {
-  idrol      Int          @id
+model Rol {
+  idrol      Int          @id @default(autoincrement())
   rol        String       @db.VarChar(50)
-  personarol personarol[]
-  rolpermiso rolpermiso[]
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  personarol PersonaRol[]
+  rolpermiso RolPermiso[]
+
+  @@map("rol")
 }
 
-model rolpermiso {
-  idrolpermiso Int     @id
+model RolPermiso {
+  idrolpermiso Int      @id @default(autoincrement())
   idrol        Int
   idpermiso    Int
-  permiso      permiso @relation(fields: [idpermiso], references: [idpermiso], onDelete: NoAction, onUpdate: NoAction)
-  rol          rol     @relation(fields: [idrol], references: [idrol], onDelete: NoAction, onUpdate: NoAction)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  permiso      Permiso  @relation(fields: [idpermiso], references: [idpermiso], onDelete: Cascade, onUpdate: Cascade)
+  rol          Rol      @relation(fields: [idrol], references: [idrol], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([idrol, idpermiso])
+  @@map("rolpermiso")
 }
 
-model seguimientoadopcion {
-  idseguimiento Int       @id
+model SeguimientoAdopcion {
+  idseguimiento Int       @id @default(autoincrement())
   idadopcion    Int
   idresponsable Int
   fecha         DateTime  @db.Date
   observaciones String    @db.VarChar(500)
-  archivo       archivo[]
-  adopcion      adopcion  @relation(fields: [idadopcion], references: [idadopcion], onDelete: NoAction, onUpdate: NoAction)
-  persona       persona   @relation(fields: [idresponsable], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  archivo       Archivo[]
+  adopcion      Adopcion  @relation(fields: [idadopcion], references: [idadopcion], onDelete: Restrict, onUpdate: Cascade)
+  usuario       Usuario   @relation(fields: [idresponsable], references: [idpersona], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([fecha])
+  @@map("seguimientoadopcion")
 }
 
-model servicioofrecido {
-  idservicio          Int                   @id
+model ServicioOfrecido {
+  idservicio          Int                   @id @default(autoincrement())
   servicio            String                @db.VarChar(100)
-  veterinariaservicio veterinariaservicio[]
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  veterinariaservicio VeterinariaServicio[]
+
+  @@map("servicioofrecido")
 }
 
-model socio {
-  idpersona  Int      @id
-  fechaalta  DateTime @db.Date
-  persona    persona  @relation(fields: [idpersona], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
+model SolicitudAdopcion {
+  idsolicituda    Int                     @id @default(autoincrement())
+  idhogar         Int
+  idsolicitante   Int
+  idpersonaaprobo Int?
+  idanimal        Int
+  estado          EstadoSolicitud	  @default(PENDIENTE)
+  rutaformulario  String                  @db.VarChar(255)
+  fechaaprobacion DateTime?               @db.Date
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  animal          Animal                  @relation(fields: [idanimal], references: [idanimal], onDelete: Restrict, onUpdate: Cascade)
+  hogar           Hogar                   @relation(fields: [idhogar], references: [idhogar], onDelete: Restrict, onUpdate: Cascade)
+  aprobadoPor     Usuario?                @relation("solicitudadopcion_idpersonaaproboTousuario", fields: [idpersonaaprobo], references: [idpersona], onDelete: SetNull, onUpdate: Cascade)
+  solicitante     Usuario                 @relation("solicitudadopcion_idsolicitanteTousuario", fields: [idsolicitante], references: [idpersona], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([estado])
+  @@map("solicitudadopcion")
 }
 
-model solicitudadopcion {
-  idsolicituda                                       Int      @id
-  idhogar                                            Int
-  idsolicitante                                      Int
-  idpersonaaprobo                                    Int?
-  idanimal                                           Int
-  estado                                             String   @db.VarChar(30)
-  rutaformulario                                     String   @db.VarChar(255)
-  fechaaprobacion                                    DateTime? @db.Date
-  animal                                             animal   @relation(fields: [idanimal], references: [idanimal], onDelete: NoAction, onUpdate: NoAction)
-  hogar                                              hogar    @relation(fields: [idhogar], references: [idhogar], onDelete: NoAction, onUpdate: NoAction)
-  persona_solicitudadopcion_idpersonaaproboTopersona persona?  @relation("solicitudadopcion_idpersonaaproboTopersona", fields: [idpersonaaprobo], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
-  persona_solicitudadopcion_idsolicitanteTopersona   persona  @relation("solicitudadopcion_idsolicitanteTopersona", fields: [idsolicitante], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
+model TipoGasto {
+  idtipogasto Int      @id @default(autoincrement())
+  nombre      String   @db.VarChar(100)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  gasto       Gasto[]
+
+  @@map("tipogasto")
 }
 
-model tipogasto {
-  idtipogasto Int     @id
-  nombre      String  @db.VarChar(100)
-  gasto       gasto[]
-}
-
-model transitante {
-  idpersona           Int               @id @default(autoincrement())
+model Transitante {
+  idpersona           Int               @id
   idestadot           Int
   disponibilidad      String            @db.VarChar(100)
   capacidaddisponible Int
   experienciaprevia   String            @db.VarChar(500)
-  estadotransitante   estadotransitante @relation(fields: [idestadot], references: [idestadot], onDelete: NoAction, onUpdate: NoAction)
-  persona             persona           @relation(fields: [idpersona], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
-  transito            transito[]
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  estadotransitante   EstadoTransitante @relation(fields: [idestadot], references: [idestadot], onDelete: Restrict, onUpdate: Cascade)
+  usuario             Usuario           @relation(fields: [idpersona], references: [idpersona], onDelete: Cascade, onUpdate: Cascade)
+  transito            Transito[]
+
+  @@map("transitante")
 }
 
-model transito {
-  idtransito    Int         @id
+model Transito {
+  idtransito    Int            @id @default(autoincrement())
   idanimal      Int
   idtransitante Int
-  fechainicio   DateTime    @db.Date
-  fechafin      DateTime?    @db.Date
-  estado        String      @db.VarChar(30)
-  animal        animal      @relation(fields: [idanimal], references: [idanimal], onDelete: NoAction, onUpdate: NoAction)
-  transitante   transitante @relation(fields: [idtransitante], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
+  fechainicio   DateTime       @db.Date
+  fechafin      DateTime?      @db.Date
+  estado        EstadoTransito @default(ACTIVO)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  animal        Animal         @relation(fields: [idanimal], references: [idanimal], onDelete: Restrict, onUpdate: Cascade)
+  transitante   Transitante    @relation(fields: [idtransitante], references: [idpersona], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([estado])
+  @@map("transito")
 }
 
-model usuario {
-  idusuario     Int    @id @default(autoincrement())
-  idpersona     Int    @unique
-  nombreusuario String @db.VarChar(50)
-  contrase_a    String @map("contraseña") @db.VarChar(255)
-  persona       persona @relation(fields: [idpersona], references: [idpersona], onDelete: NoAction, onUpdate: NoAction)
-}
-
-model vacuna {
-  idvacuna       Int              @id
+model Vacuna {
+  idvacuna       Int              @id @default(autoincrement())
   nombre         String           @db.VarChar(100)
-  registrovacuna registrovacuna[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  registrovacuna RegistroVacuna[]
+
+  @@map("vacuna")
 }
 
-model veterinaria {
+model Veterinaria {
   idresponsable       Int                   @id
   direccion           String                @db.VarChar(200)
-  responsable         responsable           @relation(fields: [idresponsable], references: [idresponsable], onDelete: NoAction, onUpdate: NoAction)
-  veterinariaservicio veterinariaservicio[]
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  responsable         Responsable           @relation(fields: [idresponsable], references: [idresponsable], onDelete: Cascade, onUpdate: Cascade)
+  veterinariaservicio VeterinariaServicio[]
+
+  @@map("veterinaria")
 }
 
-model veterinariaservicio {
-  idvetserv        Int              @id
+model VeterinariaServicio {
+  idvetserv        Int              @id @default(autoincrement())
   idveterinaria    Int
   idservicio       Int
-  servicioofrecido servicioofrecido @relation(fields: [idservicio], references: [idservicio], onDelete: NoAction, onUpdate: NoAction)
-  veterinaria      veterinaria      @relation(fields: [idveterinaria], references: [idresponsable], onDelete: NoAction, onUpdate: NoAction)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  servicioofrecido ServicioOfrecido @relation(fields: [idservicio], references: [idservicio], onDelete: Cascade, onUpdate: Cascade)
+  veterinaria      Veterinaria      @relation(fields: [idveterinaria], references: [idresponsable], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([idveterinaria, idservicio])
+  @@map("veterinariaservicio")
 }
+
