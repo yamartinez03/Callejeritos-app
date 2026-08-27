@@ -69,7 +69,7 @@ const CrearPublicacionForm = ({ onSubmit, onCancel }) => {
   };
 
   return (
-    <Card className="max-w-2xl mx-auto">
+    <Card className="max-w-5xl mx-auto">
       <CardHeader>
         <CardTitle>Crear Nueva Publicación</CardTitle>
       </CardHeader>
@@ -101,10 +101,10 @@ const CrearPublicacionForm = ({ onSubmit, onCancel }) => {
             <label
               className={`inline-flex items-center gap-2 px-4 py-2 border rounded-md text-sm font-medium transition-colors ${
                 fotos.length >= 3
-                  ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                  ? "bg-gray-200 text-gray-400 border-gray-200 cursor-not-allowed"
                   : fotos.length > 0
-                    ? "bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100 cursor-pointer"
-                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50 cursor-pointer"
+                    ? "bg-blue-50 text-blue-800 border-blue-300 hover:bg-blue-100 cursor-pointer"
+                    : "bg-gray-700 text-white border-gray-300 hover:bg-gray-50 hover:text-gray-700 cursor-pointer"
               }`}
             >
               {"Adjuntar fotos "}
