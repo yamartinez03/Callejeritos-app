@@ -236,12 +236,14 @@ model Gasto {
   fecha       DateTime  @db.Date
   comprobante String    @db.VarChar(255)
   reintegrado Boolean   @default(false)
+  aceptado    Boolean?  
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   animal      Animal    @relation(fields: [idanimal], references: [idanimal], onDelete: Restrict, onUpdate: Cascade)
   tipogasto   TipoGasto @relation(fields: [idtipogasto], references: [idtipogasto], onDelete: Restrict, onUpdate: Cascade)
 
   @@index([fecha])
+  @@index([aceptado])
   @@map("gasto")
 }
 
