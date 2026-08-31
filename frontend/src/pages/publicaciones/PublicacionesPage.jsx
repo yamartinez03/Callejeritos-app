@@ -187,20 +187,42 @@ const PublicacionesPage = () => {
     ...ANIMALES_MOCK,
   ]);
 
+  // para el buscador de publicaciones
+  const [busqueda, setBusqueda] = useState("");
+
   const filteredContent = allContent.filter((item) => {
     const esAnimal =
       item.estado === "EN_ADOPCION" || item.estado === "EN_TRANSITO";
     const estaAprobado = esAnimal || item.estadoaprobado === "APROBADA";
     const tipoItem = item.tipoPublicacion || item.estado;
+    //filtra por tipo de publicación y estado aprobado
+    // Filtro por tipo
+    const pasaFiltro =
+      filter === "TODOS"
+        ? estaAprobado
+        : filter === "EN_ADOPCION"
+          ? (item.estado === "EN_ADOPCION" || item.estado === "EN_TRANSITO") &&
+            estaAprobado
+          : tipoItem === filter && estaAprobado;
 
-    if (filter === "TODOS") return estaAprobado;
-    if (filter === "EN_ADOPCION") {
-      return (
-        (item.estado === "EN_ADOPCION" || item.estado === "EN_TRANSITO") &&
-        estaAprobado
-      );
+    if (busqueda.trim() !== "") {
+      const termino = busqueda.toLowerCase();
+      const textosBuscables = [
+        item.descripcion,
+        item.zona,
+        item.nombreVisitante,
+        item.nombre,
+        item.colorpelaje,
+        item.especie,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return pasaFiltro && textosBuscables.includes(termino);
     }
-    return tipoItem === filter && estaAprobado;
+
+    return pasaFiltro;
   });
 
   const handleCrearPublicacion = async (datos) => {
@@ -290,7 +312,8 @@ const PublicacionesPage = () => {
           </div>
 
           {/* Filtros */}
-          <div className="flex flex-wrap gap-2 mb-6">
+          <div className="flex flex-wrap gap-2 mb-6 items-center">
+            {/* Filtros */}
             {[
               { valor: "TODOS", etiqueta: "Todas" },
               { valor: "PERDIDO", etiqueta: "Perdidos" },
@@ -303,7 +326,8 @@ const PublicacionesPage = () => {
                 onClick={() => setFilter(f.valor)}
                 className="px-4 py-1.5 rounded-full text-sm font-medium border transition-all duration-200"
                 style={{
-                  backgroundColor: filter === f.valor ? "#c1440e" : "#fff8f3",
+                  backgroundColor:
+                    filter === f.valor ? "#c1440e" : "transparent",
                   color: filter === f.valor ? "#fff" : "#7a5c44",
                   borderColor: filter === f.valor ? "#c1440e" : "#d4b8a0",
                 }}
@@ -311,6 +335,45 @@ const PublicacionesPage = () => {
                 {f.etiqueta}
               </button>
             ))}
+
+            {/* Buscador — en desktop a la derecha, en mobile nueva fila alineado a la derecha */}
+            <div
+              className="ml-auto flex items-center gap-2 border rounded-full px-4 py-1.5 bg-white w-full md:w-auto"
+              style={{ borderColor: "#d4b8a0" }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4 shrink-0"
+                style={{ color: "#9c7b5e" }}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"
+                />
+              </svg>
+              <input
+                type="text"
+                placeholder="Buscar por color, nombre, zona..."
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+                className="text-sm bg-transparent outline-none w-full md:w-48"
+                style={{ color: "#2c1a0e" }}
+              />
+              {busqueda && (
+                <button
+                  onClick={() => setBusqueda("")}
+                  className="text-xs shrink-0"
+                  style={{ color: "#9c7b5e" }}
+                >
+                  ✕
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Layout split o full */}
