@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import PublicacionCard from "./components/PublicacionCard";
 import CrearPublicacionForm from "./components/CrearPublicacionForm";
+import logo from "@/assets/callejeritos-logo.png";
 
-// Datos de ejemplo simulados basados en el schema de Prisma
 const PUBLICACIONES_MOCK = [
   {
     idpublicacion: 1,
@@ -28,16 +28,6 @@ const PUBLICACIONES_MOCK = [
         idfoto: 1,
         idpub: 1,
         ruta: "https://media.istockphoto.com/id/162715246/photo/little-golden-retriever.jpg?s=612x612&w=0&k=20&c=7jT7YOpJ3QI3oqJ8vH9ZaNKciZoC0Y7HnCpmT6S4o6w=",
-      },
-      {
-        idfoto: 2,
-        idpub: 1,
-        ruta: "https://media.istockphoto.com/id/163206279/es/foto/little-labrador-dorado.webp?a=1&b=1&s=612x612&w=0&k=20&c=vMl-BgjPHhfdvOtQEkvmOzkXTPA8xoHa-SejsJcSjsY=",
-      },
-      {
-        idfoto: 3,
-        idpub: 1,
-        ruta: "https://media.istockphoto.com/id/162324055/es/foto/little-labrador-dorado.webp?a=1&b=1&s=612x612&w=0&k=20&c=Npo0V7X_69cbT8lvhbqy-ptZAGfKuk9M_axQCn0hxig=",
       },
     ],
   },
@@ -114,8 +104,6 @@ const PUBLICACIONES_MOCK = [
     ],
   },
 ];
-
-// Datos de ejemplo de animales en adopción/transito basados en el schema de Prisma
 
 const ANIMALES_MOCK = [
   {
@@ -194,65 +182,30 @@ const ANIMALES_MOCK = [
 const PublicacionesPage = () => {
   const [filter, setFilter] = useState("TODOS");
   const [showCrearForm, setShowCrearForm] = useState(false);
-  // Combinar publicaciones y animales en un solo array
   const [allContent, setAllContent] = useState([
     ...PUBLICACIONES_MOCK,
     ...ANIMALES_MOCK,
   ]);
-
-  // FILTRADO UNIFICADO
-  // Aquí se debería llamar al backend: GET /api/publicaciones?tipo=X&estado=APROBADA
-  // Y para animales: GET /api/animales?estado=EN_ADOPCION,EN_TRANSITO
-  // El backend debería devolver todo en un formato unificado
 
   const filteredContent = allContent.filter((item) => {
     const esAnimal =
       item.estado === "EN_ADOPCION" || item.estado === "EN_TRANSITO";
     const estaAprobado = esAnimal || item.estadoaprobado === "APROBADA";
     const tipoItem = item.tipoPublicacion || item.estado;
-    // Filtro "TODOS"
-    if (filter === "TODOS") return estaAprobado;
 
-    // Si seleccionan "EN_ADOPCION", mostramos tanto EN_ADOPCION como EN_TRANSITO
+    if (filter === "TODOS") return estaAprobado;
     if (filter === "EN_ADOPCION") {
       return (
         (item.estado === "EN_ADOPCION" || item.estado === "EN_TRANSITO") &&
         estaAprobado
       );
     }
-
-    // Resto de los filtros (PERDIDO, ENCONTRADO, AVISTAMIENTO)
     return tipoItem === filter && estaAprobado;
   });
 
-  // CREAR NUEVA PUBLICACIÓN
-  // Aquí se debería llamar al backend: POST /api/publicaciones
   const handleCrearPublicacion = async (datos) => {
-    console.log("Datos para enviar al backend:", datos);
-
-    // CALL TO BACKEND: POST /api/publicaciones
-    // const response = await fetch('http://localhost:3000/api/publicaciones', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //     'Authorization': `Bearer ${token}` // si está autenticado
-    //   },
-    //   body: JSON.stringify({
-    //     tipoPublicacion: datos.tipoPublicacion,
-    //     descripcion: datos.descripcion,
-    //     zona: datos.zona,
-    //     fecha: datos.fecha,
-    //     nombreVisitante: datos.nombreVisitante || null,
-    //     emailVisitante: datos.emailVisitante || null,
-    //     telefonoVisitante: datos.telefonoVisitante || null,
-    //     // Si el usuario está autenticado, enviar idpersonapublico
-    //     // idpersonapublico: usuarioId
-    //   })
-    // })
-
-    // Simulación exitosa utilizando el mock de publicaciones
     const nuevaPublicacion = {
-      idpublicacion: PUBLICACIONES_MOCK.length + 1,
+      idpublicacion: Date.now(),
       uuid: Math.random().toString(36).substring(7),
       idpersonapublico: null,
       idpersonaaprobo: null,
@@ -264,116 +217,141 @@ const PublicacionesPage = () => {
       nombreVisitante: datos.nombreVisitante || null,
       emailVisitante: datos.emailVisitante || null,
       telefonoVisitante: datos.telefonoVisitante || null,
-      estadoaprobado: "PENDIENTE", // Las publicaciones nuevas quedan pendientes de aprobación
+      estadoaprobado: "PENDIENTE",
       resuelto: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       fotos: [],
     };
-
-    setAllContent((prevContent) => [nuevaPublicacion, ...prevContent]);
+    setAllContent((prev) => [nuevaPublicacion, ...prev]);
     setShowCrearForm(false);
-    alert(
-      "Publicación creada exitosamente. Quedará pendiente de aprobación por un administrador.",
-    );
+    alert("Publicación enviada. Quedará pendiente de aprobación.");
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ backgroundColor: "#e8ddd4" }}>
       {/* Navbar */}
-      <nav className="bg-white border-b border-gray-200 px-6 py-6 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-3xl">🐾</span>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Callejeritos Villa Elisa
-          </h1>
+      <nav
+        className="px-6 py-4 flex items-center justify-between border-b"
+        style={{ backgroundColor: "#ffe9e0" }}
+      >
+        <div className="flex items-center gap-3">
+          <img
+            src={logo}
+            alt="Callejeritos logo"
+            className="h-10 w-10 object-contain"
+          />
+          <div>
+            <h1 className="text-lg font-bold" style={{ color: "#2c1a0e" }}>
+              Callejeritos Villa Elisa
+            </h1>
+            <p className="text-xs" style={{ color: "#9c7b5e" }}>
+              Gestión animal
+            </p>
+          </div>
         </div>
-        <Button variant="outline">Iniciar sesión</Button>
+        <Button className="font-semibold">Iniciar sesión</Button>
       </nav>
 
-      {/* Contenido principal */}
-      <main className="mx-auto px-10 py-8">
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-2">
-            <h2 className="text-2xl font-bold text-black">
-              Publicaciones de Animales
-            </h2>
-            <Button onClick={() => setShowCrearForm(!showCrearForm)}>
-              {showCrearForm ? "Cancelar" : "+ Nueva publicacion"}
-            </Button>
-          </div>
-          <p className="text-gray-500">
-            Perdidos, encontrados y avistamientos en Villa Elisa
+      <div
+        style={{ background: "linear-gradient(to bottom, #fff8f3, #f0e6dc)" }}
+      >
+        {/* Header de bienvenida */}
+        <div className="px-10 py-8">
+          <h2 className="text-3xl font-bold mb-1" style={{ color: "#2c1a0e" }}>
+            Bienvenido a Callejeritos 🐾
+          </h2>
+          <p className="text-base" style={{ color: "#7a5c44" }}>
+            Acá podés reportar un animal perdido, encontrado o avistado en tu
+            zona. Cada publicación ayuda a que más animales encuentren su hogar.
           </p>
         </div>
 
-        {showCrearForm ? (
-          <CrearPublicacionForm
-            onSubmit={handleCrearPublicacion}
-            onCancel={() => setShowCrearForm(false)}
-          />
-        ) : (
-          <>
-            {/* Filtros */}
-            <div className="flex flex-wrap gap-2 mb-6">
-              <Button
-                variant={filter === "TODOS" ? "default" : "outline"}
-                onClick={() => setFilter("TODOS")}
-              >
-                Todas
-              </Button>
-              <Button
-                variant={filter === "PERDIDO" ? "default" : "outline"}
-                onClick={() => setFilter("PERDIDO")}
-              >
-                Perdidos
-              </Button>
-              <Button
-                variant={filter === "ENCONTRADO" ? "default" : "outline"}
-                onClick={() => setFilter("ENCONTRADO")}
-              >
-                Encontrados
-              </Button>
-              <Button
-                variant={filter === "AVISTAMIENTO" ? "default" : "outline"}
-                onClick={() => setFilter("AVISTAMIENTO")}
-              >
-                Avistamientos
-              </Button>
-              <Button
-                variant={filter === "EN_ADOPCION" ? "default" : "outline"}
-                onClick={() => setFilter("EN_ADOPCION")}
-              >
-                En Adopcion
-              </Button>
+        {/* Contenido principal */}
+        <main className="px-10 py-8">
+          {/* Header de sección */}
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h3 className="text-xl font-bold" style={{ color: "#2c1a0e" }}>
+                Publicaciones activas
+              </h3>
+              <p className="text-sm" style={{ color: "#9c7b5e" }}>
+                {filteredContent.length}{" "}
+                {filteredContent.length === 1 ? "resultado" : "resultados"}
+              </p>
             </div>
+            <Button
+              className="font-semibold"
+              onClick={() => setShowCrearForm(!showCrearForm)}
+              variant={showCrearForm ? "secondary" : "default"}
+            >
+              {showCrearForm ? "✕ Cancelar" : "+ Nueva publicación"}
+            </Button>
+          </div>
 
-            {/* Contador */}
-            <p className="text-gray-600 mb-6">
-              Mostrando {filteredContent.length} elementos
-            </p>
+          {/* Filtros */}
+          <div className="flex flex-wrap gap-2 mb-6">
+            {[
+              { valor: "TODOS", etiqueta: "Todas" },
+              { valor: "PERDIDO", etiqueta: "Perdidos" },
+              { valor: "ENCONTRADO", etiqueta: "Encontrados" },
+              { valor: "AVISTAMIENTO", etiqueta: "Avistamientos" },
+              { valor: "EN_ADOPCION", etiqueta: "En adopción" },
+            ].map((f) => (
+              <button
+                key={f.valor}
+                onClick={() => setFilter(f.valor)}
+                className="px-4 py-1.5 rounded-full text-sm font-medium border transition-all duration-200"
+                style={{
+                  backgroundColor: filter === f.valor ? "#c1440e" : "#fff8f3",
+                  color: filter === f.valor ? "#fff" : "#7a5c44",
+                  borderColor: filter === f.valor ? "#c1440e" : "#d4b8a0",
+                }}
+              >
+                {f.etiqueta}
+              </button>
+            ))}
+          </div>
 
-            {/* Grid de contenido unificado */}
-            {filteredContent.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredContent.map((item) => (
-                  <PublicacionCard
-                    key={item.uuid || `animal-${item.idanimal}`}
-                    item={item}
-                    publicacion={item}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-gray-500 text-lg">
-                  No hay elementos para mostrar
-                </p>
+          {/* Layout split o full */}
+          <div
+            className={`flex gap-6 items-start ${showCrearForm ? "flex-col md:flex-row" : ""}`}
+          >
+            {/* Form — en mobile aparece primero, en desktop a la derecha */}
+            {showCrearForm && (
+              <div className="w-full md:w-1/4 md:order-2 md:sticky md:top-6">
+                <CrearPublicacionForm
+                  onSubmit={handleCrearPublicacion}
+                  onCancel={() => setShowCrearForm(false)}
+                />
               </div>
             )}
-          </>
-        )}
-      </main>
+
+            {/* Publicaciones — en mobile aparece después del form, en desktop a la izquierda */}
+            <div
+              className={`${showCrearForm ? "w-full md:w-3/4 md:order-1" : "w-full"}`}
+            >
+              {filteredContent.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredContent.map((item) => (
+                    <PublicacionCard
+                      key={item.uuid || `animal-${item.idanimal}`}
+                      item={item}
+                      publicacion={item}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-16">
+                  <p className="text-lg" style={{ color: "#9c7b5e" }}>
+                    No hay publicaciones para mostrar.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
   );
 };
