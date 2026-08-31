@@ -103,9 +103,24 @@ const CrearPublicacionForm = ({ onSubmit, onCancel }) => {
                 fotos.length >= 3
                   ? "bg-gray-200 text-gray-400 border-gray-200 cursor-not-allowed"
                   : fotos.length > 0
-                    ? "bg-blue-50 text-blue-800 border-blue-300 hover:bg-blue-100 cursor-pointer"
-                    : "bg-gray-700 text-white border-gray-300 hover:bg-gray-50 hover:text-gray-700 cursor-pointer"
+                    ? "cursor-pointer"
+                    : "cursor-pointer"
               }`}
+              style={
+                fotos.length >= 3
+                  ? {}
+                  : fotos.length > 0
+                    ? {
+                        backgroundColor: "#f0e6dc",
+                        color: "#d67526",
+                        borderColor: "#d4b8a0",
+                      }
+                    : {
+                        backgroundColor: "#c1440e",
+                        color: "#ffffff",
+                        borderColor: "#c1440e",
+                      }
+              }
             >
               {"Adjuntar fotos "}
               <input
