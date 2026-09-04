@@ -10,13 +10,18 @@ import {
 } from "@/components/ui/table";
 import DialogDetalleGasto from "./DialogDetalleGasto";
 
-const ESTADO_ESTILO = {
-  PENDIENTE: "text-yellow-600",
-  APROBADO: "text-green-600",
-  RECHAZADO: "text-red-600",
-};
+// aceptado: null = pendiente | true = aceptado | false = rechazado
+function EstadoTexto({ aceptado }) {
+  if (aceptado === null) {
+    return <span className="font-medium text-yellow-600">Pendiente</span>;
+  }
+  if (aceptado === true) {
+    return <span className="font-medium text-green-600">Aceptado</span>;
+  }
+  return <span className="font-medium text-red-600">Rechazado</span>;
+}
 
-export default function TablaGastos({ gastos, onAprobar, onRechazar }) {
+export default function TablaGastos({ gastos, onAceptar, onRechazar }) {
   const [gastoDetalle, setGastoDetalle] = useState(null);
 
   if (gastos.length === 0) {
@@ -35,7 +40,7 @@ export default function TablaGastos({ gastos, onAprobar, onRechazar }) {
             <TableRow>
               <TableHead>Animal</TableHead>
               <TableHead>Descripcion</TableHead>
-              <TableHead>Categoria</TableHead>
+              <TableHead>Tipo de gasto</TableHead>
               <TableHead>Monto</TableHead>
               <TableHead>Fecha</TableHead>
               <TableHead>Estado</TableHead>
@@ -44,22 +49,22 @@ export default function TablaGastos({ gastos, onAprobar, onRechazar }) {
           </TableHeader>
           <TableBody>
             {gastos.map((gasto) => (
-              <TableRow key={gasto.id}>
+              <TableRow key={gasto.idgasto}>
                 <TableCell className="font-medium text-black">
-                  {gasto.animalNombre}
+                  {gasto.animal.nombre}
                 </TableCell>
                 <TableCell className="text-gray-500">
                   {gasto.descripcion}
                 </TableCell>
-                <TableCell className="capitalize text-gray-500">
-                  {gasto.categoria.toLowerCase().replaceAll("_", " ")}
+                <TableCell className="text-gray-500">
+                  {gasto.tipogasto.nombre}
                 </TableCell>
                 <TableCell className="text-black">
                   ${Number(gasto.monto).toLocaleString("es-AR")}
                 </TableCell>
                 <TableCell className="text-gray-500">{gasto.fecha}</TableCell>
-                <TableCell className={`font-medium ${ESTADO_ESTILO[gasto.estado]}`}>
-                  {gasto.estado}
+                <TableCell>
+                  <EstadoTexto aceptado={gasto.aceptado} />
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-2">
@@ -70,14 +75,14 @@ export default function TablaGastos({ gastos, onAprobar, onRechazar }) {
                     >
                       Ver más
                     </Button>
-                    {gasto.estado === "PENDIENTE" && (
+                    {gasto.aceptado === null && (
                       <>
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => onAprobar(gasto)}
+                          onClick={() => onAceptar(gasto)}
                         >
-                          Aprobar
+                          Aceptar
                         </Button>
                         <Button
                           size="sm"

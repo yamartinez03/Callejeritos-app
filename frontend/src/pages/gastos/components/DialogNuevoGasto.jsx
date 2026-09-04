@@ -15,35 +15,30 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const categorias = [
-  { valor: "CONSULTA_VETERINARIA", etiqueta: "Consulta veterinaria" },
-  { valor: "INTERNACION", etiqueta: "Internación" },
-  { valor: "ESTUDIOS", etiqueta: "Estudios (análisis/eco/radio)" },
-  { valor: "MEDICACION", etiqueta: "Medicación" },
-  { valor: "TRASLADO", etiqueta: "Traslado" },
-  { valor: "ALIMENTO", etiqueta: "Alimento" },
-  { valor: "OTRO_INSUMO", etiqueta: "Otro insumo" },
+// TODO: animal lo va a resolver el componente de búsqueda de otra compañera
+// (GCA_05). Mientras tanto, mock temporal.
+const animalesMock = [
+  { idanimal: 1, nombre: "Luna" },
+  { idanimal: 2, nombre: "Mochi" },
+  { idanimal: 3, nombre: "Tobi" },
 ];
 
-// TODO: esto es un mock temporal para poder probar el formulario. Cuando la
-// búsqueda de animal (GCA_05) esté lista, reemplazar este <Select> por ese
-// componente y borrar animalesMock.
-const animalesMock = [
-  { id: "luna", nombre: "Luna" },
-  { id: "mochi", nombre: "Mochi" },
-  { id: "tobi", nombre: "Tobi" },
-  { id: "roque", nombre: "Roque" },
-  { id: "manchas", nombre: "Manchas" },
+// Reemplazar este mock por un fetch a
+// GET /api/tipos-gasto ni bien exista ese endpoint.
+const tiposGastoMock = [
+  { idtipogasto: 1, nombre: "Consulta veterinaria" },
+  { idtipogasto: 2, nombre: "Internación" },
+  { idtipogasto: 3, nombre: "Medicación" },
+  { idtipogasto: 4, nombre: "Alimento" },
+  { idtipogasto: 5, nombre: "Traslado" },
 ];
 
 const formVacio = {
-  animalId: "",
-  categoria: "",
+  idanimal: "",
+  idtipogasto: "",
   monto: "",
   fecha: "",
   descripcion: "",
-  proveedor: "",
-  cargadoPor: "",
 };
 
 export default function DialogNuevoGasto({ abierto, onCerrar, onGuardar }) {
@@ -55,24 +50,36 @@ export default function DialogNuevoGasto({ abierto, onCerrar, onGuardar }) {
 
   const handleGuardar = () => {
     if (
-      !form.animalId ||
-      !form.categoria ||
+      !form.idanimal ||
+      !form.idtipogasto ||
       !form.monto ||
       !form.fecha ||
       !form.descripcion ||
-      !form.cargadoPor
+      !comprobante
     ) {
-      alert("Completá los campos obligatorios (*)");
+      // comprobante es obligatorio en el schema (String, sin "?")
+      alert("Completá todos los campos, incluido el comprobante.");
       return;
     }
 
-    const animal = animalesMock.find((a) => a.id === form.animalId);
+    const animal = animalesMock.find(
+      (a) => a.idanimal === Number(form.idanimal)
+    );
+    const tipogasto = tiposGastoMock.find(
+      (t) => t.idtipogasto === Number(form.idtipogasto)
+    );
 
     onGuardar({
-      ...form,
+      idanimal: Number(form.idanimal),
+      idtipogasto: Number(form.idtipogasto),
       monto: Number(form.monto),
-      animalNombre: animal?.nombre,
-      comprobanteUrl: comprobante ? comprobante.name : null,
+      fecha: form.fecha,
+      descripcion: form.descripcion,
+      comprobante: comprobante.name,
+      reintegrado: false,
+      aceptado: null, // nace sin evaluar
+      animal, // desnormalizado solo para pintar la tabla sin pedir de nuevo
+      tipogasto,
     });
 
     setForm(formVacio);
@@ -91,15 +98,15 @@ export default function DialogNuevoGasto({ abierto, onCerrar, onGuardar }) {
           <div>
             <label className="text-sm text-gray-500">Animal *</label>
             <Select
-              value={form.animalId}
-              onValueChange={(v) => setCampo("animalId", v)}
+              value={form.idanimal}
+              onValueChange={(v) => setCampo("idanimal", v)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Seleccionar animal…" />
               </SelectTrigger>
               <SelectContent>
                 {animalesMock.map((a) => (
-                  <SelectItem key={a.id} value={a.id}>
+                  <SelectItem key={a.idanimal} value={String(a.nombre)}>
                     {a.nombre}
                   </SelectItem>
                 ))}
@@ -108,18 +115,18 @@ export default function DialogNuevoGasto({ abierto, onCerrar, onGuardar }) {
           </div>
 
           <div>
-            <label className="text-sm text-gray-500">Categoría *</label>
+            <label className="text-sm text-gray-500">Tipo de gasto *</label>
             <Select
-              value={form.categoria}
-              onValueChange={(v) => setCampo("categoria", v)}
+              value={form.idtipogasto}
+              onValueChange={(v) => setCampo("idtipogasto", v)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Seleccionar categoría…" />
+                <SelectValue placeholder="Seleccionar tipo…" />
               </SelectTrigger>
               <SelectContent>
-                {categorias.map((c) => (
-                  <SelectItem key={c.valor} value={c.valor}>
-                    {c.etiqueta}
+                {tiposGastoMock.map((t) => (
+                  <SelectItem key={t.idtipogasto} value={String(t.nombre)}>
+                    {t.nombre}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -156,29 +163,7 @@ export default function DialogNuevoGasto({ abierto, onCerrar, onGuardar }) {
           </div>
 
           <div>
-            <label className="text-sm text-gray-500">
-              Proveedor / Veterinaria
-            </label>
-            <Input
-              value={form.proveedor}
-              onChange={(e) => setCampo("proveedor", e.target.value)}
-              placeholder="Ej: Vet. Pellegrino"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm text-gray-500">Cargado por *</label>
-            <Input
-              value={form.cargadoPor}
-              onChange={(e) => setCampo("cargadoPor", e.target.value)}
-              placeholder="Nombre del hogar o colaborador"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm text-gray-500">
-              Comprobante (opcional)
-            </label>
+            <label className="text-sm text-gray-500">Comprobante *</label>
             <Input
               type="file"
               accept="image/*,application/pdf"

@@ -4,90 +4,87 @@ import TablaGastos from "./components/TablaGastos";
 import FiltroEstado from "./components/FiltroEstado";
 import DialogNuevoGasto from "./components/DialogNuevoGasto";
 
-// Datos de prueba hasta conectar con el backend (GG_01/GG_03 en gastoController.js)
+// Datos de prueba hasta conectar con GET /api/gastos.
+// aceptado: null = pendiente | true = aceptado | false = rechazado
 const gastosMock = [
   {
-    id: 1,
-    animalId: "luna",
-    animalNombre: "Luna",
-    fecha: "2026-06-12",
-    monto: 8500,
-    categoria: "CONSULTA_VETERINARIA",
+    idgasto: 1,
+    animal: { idanimal: 1, nombre: "Luna" },
+    tipogasto: { idtipogasto: 1, nombre: "Consulta veterinaria" },
     descripcion: "Consulta veterinaria urgente",
-    proveedor: "Vet. Pellegrino",
-    cargadoPor: "Ana González",
-    estado: "APROBADO",
-    comprobanteUrl: null,
-  },
-  {
-    id: 2,
-    animalId: "luna",
-    animalNombre: "Luna",
+    monto: 8500,
     fecha: "2026-06-12",
-    monto: 3200,
-    categoria: "MEDICACION",
+    comprobante: "comprobante_luna_01.jpg",
+    reintegrado: true,
+    aceptado: true,
+  },
+  {
+    idgasto: 2,
+    animal: { idanimal: 1, nombre: "Luna" },
+    tipogasto: { idtipogasto: 3, nombre: "Medicación" },
     descripcion: "Medicación post-consulta",
-    proveedor: "Farmacia veterinaria",
-    cargadoPor: "Ana González",
-    estado: "PENDIENTE",
-    comprobanteUrl: null,
+    monto: 3200,
+    fecha: "2026-06-12",
+    comprobante: "comprobante_luna_02.jpg",
+    reintegrado: false,
+    aceptado: null,
   },
   {
-    id: 3,
-    animalId: "mochi",
-    animalNombre: "Mochi",
-    fecha: "2026-06-01",
-    monto: 18500,
-    categoria: "INTERNACION",
+    idgasto: 3,
+    animal: { idanimal: 2, nombre: "Mochi" },
+    tipogasto: { idtipogasto: 2, nombre: "Internación" },
     descripcion: "Castración",
-    proveedor: "Vet. Castillo",
-    cargadoPor: "Organización",
-    estado: "APROBADO",
-    comprobanteUrl: null,
+    monto: 18500,
+    fecha: "2026-06-01",
+    comprobante: "comprobante_mochi_01.jpg",
+    reintegrado: true,
+    aceptado: true,
   },
   {
-    id: 4,
-    animalId: "roque",
-    animalNombre: "Roque",
-    fecha: "2026-05-01",
-    monto: 4800,
-    categoria: "ALIMENTO",
+    idgasto: 4,
+    animal: { idanimal: 3, nombre: "Tobi" },
+    tipogasto: { idtipogasto: 4, nombre: "Alimento" },
     descripcion: "Alimento (mes de mayo)",
-    proveedor: "Carlos Méndez",
-    cargadoPor: "Carlos Méndez",
-    estado: "PENDIENTE",
-    comprobanteUrl: null,
+    monto: 4800,
+    fecha: "2026-05-01",
+    comprobante: "comprobante_tobi_01.jpg",
+    reintegrado: false,
+    aceptado: false,
   },
 ];
+
+let siguienteId = gastosMock.length + 1;
 
 export default function GastosPage() {
   const [gastos, setGastos] = useState(gastosMock);
   const [filtro, setFiltro] = useState("todos");
   const [abrirNuevoGasto, setAbrirNuevoGasto] = useState(false);
 
-  const gastosFiltrados =
-    filtro === "todos" ? gastos : gastos.filter((g) => g.estado === filtro);
+  const gastosFiltrados = gastos.filter((g) => {
+    if (filtro === "pendientes") return g.aceptado === null;
+    if (filtro === "aceptados") return g.aceptado === true;
+    if (filtro === "rechazados") return g.aceptado === false;
+    return true; // "todos"
+  });
 
   const totalAcumulado = gastos.reduce((sum, g) => sum + Number(g.monto), 0);
-  const pendientes = gastos.filter((g) => g.estado === "PENDIENTE");
-  const totalPendiente = pendientes.reduce((sum, g) => sum + Number(g.monto), 0);
+  const pendientes = gastos.filter((g) => g.aceptado === null);
 
   const handleGuardarGasto = (nuevoGasto) => {
-    setGastos((prev) => [
-      { id: Date.now(), estado: "PENDIENTE", ...nuevoGasto },
-      ...prev,
-    ]);
+    setGastos((prev) => [{ idgasto: siguienteId++, ...nuevoGasto }, ...prev]);
   };
 
-  const handleAprobar = (gasto) => {
+  const handleAceptar = (gasto) => {
     setGastos((prev) =>
-      prev.map((g) => (g.id === gasto.id ? { ...g, estado: "APROBADO" } : g))
+      prev.map((g) => (g.idgasto === gasto.idgasto ? { ...g, aceptado: true } : g))
     );
   };
 
   const handleRechazar = (gasto) => {
     setGastos((prev) =>
-      prev.map((g) => (g.id === gasto.id ? { ...g, estado: "RECHAZADO" } : g))
+      prev.map((g) =>
+        g.idgasto === gasto.idgasto ? { ...g, aceptado: false } : g
+      )
     );
   };
 
@@ -98,7 +95,7 @@ export default function GastosPage() {
         <div>
           <h1 className="text-xl font-bold text-black">Gastos</h1>
           <p className="text-sm text-gray-500">
-            Gastos imputados por animal y rendición de hogares de tránsito
+            Gastos imputados por animal y validación del núcleo operativo
           </p>
         </div>
         <Button onClick={() => setAbrirNuevoGasto(true)}>
@@ -117,26 +114,26 @@ export default function GastosPage() {
             </p>
           </div>
           <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <p className="text-sm text-gray-500">Pendiente de rendición</p>
+            <p className="text-sm text-gray-500">Pendientes de revisión</p>
             <p className="text-2xl font-bold text-yellow-500">
-              ${totalPendiente.toLocaleString("es-AR")}
+              {pendientes.length}
             </p>
           </div>
           <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <p className="text-sm text-gray-500">Comprobantes pendientes</p>
+            <p className="text-sm text-gray-500">Sin reintegrar</p>
             <p className="text-2xl font-bold text-red-600">
-              {pendientes.length}
+              {gastos.filter((g) => !g.reintegrado).length}
             </p>
           </div>
         </div>
 
-        {/* Filtro por estado */}
+        {/* Filtro por estado de revisión */}
         <FiltroEstado filtroActivo={filtro} onCambiarFiltro={setFiltro} />
 
         {/* Tabla */}
         <TablaGastos
           gastos={gastosFiltrados}
-          onAprobar={handleAprobar}
+          onAceptar={handleAceptar}
           onRechazar={handleRechazar}
         />
       </div>

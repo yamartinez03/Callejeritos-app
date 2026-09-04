@@ -1,8 +1,9 @@
+// aceptado: null = pendiente de evaluar | true = aceptado | false = rechazado
 const filtros = [
   { valor: "todos", etiqueta: "Todos" },
-  { valor: "PENDIENTE", etiqueta: "Pendientes" },
-  { valor: "APROBADO", etiqueta: "Aprobados" },
-  { valor: "RECHAZADO", etiqueta: "Rechazados" },
+  { valor: "pendientes", etiqueta: "Pendientes" },
+  { valor: "aceptados", etiqueta: "Aceptados" },
+  { valor: "rechazados", etiqueta: "Rechazados" },
 ];
 
 export default function FiltroEstado({ filtroActivo, onCambiarFiltro }) {
