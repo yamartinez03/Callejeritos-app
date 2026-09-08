@@ -105,6 +105,9 @@
   --danger-foreground: oklch(0.98 0.01 25);
   --info: oklch(0.57 0.087 247);
   --info-foreground: oklch(0.98 0.01 247);
+  
+  /* Color específico para filtros activos */
+  --filter-active: #c1440e;
 
   --chart-1: oklch(0.631 0.135 41);
   --chart-2: oklch(0.6 0.099 141);

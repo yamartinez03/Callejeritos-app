@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import PublicacionCard from "./components/PublicacionCard";
 import CrearPublicacionForm from "./components/CrearPublicacionForm";
@@ -28,6 +28,16 @@ const PUBLICACIONES_MOCK = [
         idfoto: 1,
         idpub: 1,
         ruta: "https://media.istockphoto.com/id/162715246/photo/little-golden-retriever.jpg?s=612x612&w=0&k=20&c=7jT7YOpJ3QI3oqJ8vH9ZaNKciZoC0Y7HnCpmT6S4o6w=",
+      },
+      {
+        idfoto: 2,
+        idpub: 1,
+        ruta: "https://media.istockphoto.com/id/163206279/es/foto/little-labrador-dorado.webp?a=1&b=1&s=612x612&w=0&k=20&c=vMl-BgjPHhfdvOtQEkvmOzkXTPA8xoHa-SejsJcSjsY=",
+      },
+      {
+        idfoto: 3,
+        idpub: 1,
+        ruta: "https://media.istockphoto.com/id/162324055/es/foto/little-labrador-dorado.webp?a=1&b=1&s=612x612&w=0&k=20&c=Npo0V7X_69cbT8lvhbqy-ptZAGfKuk9M_axQCn0hxig=",
       },
     ],
   },
@@ -186,9 +196,45 @@ const PublicacionesPage = () => {
     ...PUBLICACIONES_MOCK,
     ...ANIMALES_MOCK,
   ]);
+  const [currentHeroSlide, setCurrentHeroSlide] = useState(0);
 
   // para el buscador de publicaciones
   const [busqueda, setBusqueda] = useState("");
+
+  // Carrusel del hero con autoplay --- verificar con Laura
+  const heroSlides = [
+    {
+      image: "./src/assets/photo-hero.jpg",
+      title: "Asociación Callejeritos Villa Elisa",
+      description:
+        "Rescatamos, rehabilitamos y buscamos hogares responsables para animales en situación de calle, promoviendo el respeto y bienestar animal hacia una comunidad sin abandono.",
+    },
+    {
+      image:
+        "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=1920&q=80",
+      title: "Juntos por ellos",
+      description:
+        "Cada gesto de amor cuenta. Trabajamos incansablemente para dar una segunda oportunidad a quienes más lo necesitan, construyendo lazos inquebrantables entre humanos y animales.",
+    },
+  ];
+
+  const nextHeroSlide = () => {
+    setCurrentHeroSlide((prev) => (prev + 1) % heroSlides.length);
+  };
+
+  const prevHeroSlide = () => {
+    setCurrentHeroSlide(
+      (prev) => (prev - 1 + heroSlides.length) % heroSlides.length,
+    );
+  };
+
+  // Autoplay del carrusel
+  useEffect(() => {
+    const interval = setInterval(() => {
+      nextHeroSlide();
+    }, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   const filteredContent = allContent.filter((item) => {
     const esAnimal =
@@ -251,11 +297,11 @@ const PublicacionesPage = () => {
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "#e8ddd4" }}>
-      {/* Navbar */}
+    <div className="min-h-screen" style={{ backgroundColor: "var(--muted)" }}>
+      {/* Navbar sticky */}
       <nav
-        className="px-6 py-4 flex items-center justify-between border-b"
-        style={{ backgroundColor: "#ffe9e0" }}
+        className="px-6 py-4 flex items-center justify-between border-b sticky top-0 z-50"
+        style={{ backgroundColor: "var(--secondary)" }}
       >
         <div className="flex items-center gap-3">
           <img
@@ -264,40 +310,114 @@ const PublicacionesPage = () => {
             className="h-10 w-10 object-contain"
           />
           <div>
-            <h1 className="text-lg font-bold" style={{ color: "#2c1a0e" }}>
+            <h1
+              className="text-lg font-bold"
+              style={{ color: "var(--foreground)" }}
+            >
               Callejeritos Villa Elisa
             </h1>
-            <p className="text-xs" style={{ color: "#9c7b5e" }}>
-              Gestión animal
-            </p>
           </div>
         </div>
         <Button className="font-semibold">Iniciar sesión</Button>
       </nav>
 
-      <div
-        style={{ background: "linear-gradient(to bottom, #fff8f3, #f0e6dc)" }}
-      >
-        {/* Header de bienvenida */}
-        <div className="px-10 py-8">
-          <h2 className="text-3xl font-bold mb-1" style={{ color: "#2c1a0e" }}>
-            Bienvenido a Callejeritos 🐾
-          </h2>
-          <p className="text-base" style={{ color: "#7a5c44" }}>
-            Acá podés reportar un animal perdido, encontrado o avistado en tu
-            zona. Cada publicación ayuda a que más animales encuentren su hogar.
-          </p>
-        </div>
+      {/* Hero Section con Carrusel */}
+      <div className="relative w-full h-96 md:h-[600px] overflow-hidden">
+        <div
+          className="relative w-full h-full bg-cover bg-center bg-no-repeat transition-all duration-500"
+          style={{
+            backgroundImage: `url('${heroSlides[currentHeroSlide].image}')`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/30"></div>
 
+          {/* Controles del carrusel */}
+          <button
+            onClick={prevHeroSlide}
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-white/40 text-white p-3 rounded-full transition-colors"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+
+          <button
+            onClick={nextHeroSlide}
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-white/40 text-white p-3 rounded-full transition-colors"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+
+          {/* Indicador del carrusel */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+            {heroSlides.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentHeroSlide(index)}
+                className={`w-2 h-2 rounded-full transition-colors ${
+                  index === currentHeroSlide ? "bg-white" : "bg-white/50"
+                }`}
+              />
+            ))}
+          </div>
+
+          <div className="relative z-10 h-full flex items-center px-8 md:px-16 lg:px-24">
+            <div className="max-w-3xl md:max-w-4xl">
+              <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-4 md:mb-6 leading-tight whitespace-nowrap">
+                {heroSlides[currentHeroSlide].title}
+              </h1>
+              <p className="text-base md:text-xl lg:text-2xl text-white/95 mb-6 md:mb-8 leading-relaxed">
+                {heroSlides[currentHeroSlide].description}
+              </p>
+              <button className="font-semibold px-6 py-3 text-lg border-2 border-white text-white rounded-lg hover:bg-white/10 transition-colors">
+                Conocer Más
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        style={{
+          background:
+            "linear-gradient(to bottom, var(--background), var(--muted))",
+        }}
+      >
         {/* Contenido principal */}
         <main className="px-10 py-8">
           {/* Header de sección */}
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h3 className="text-xl font-bold" style={{ color: "#2c1a0e" }}>
+              <h3
+                className="text-xl font-bold"
+                style={{ color: "var(--foreground)" }}
+              >
                 Publicaciones activas
               </h3>
-              <p className="text-sm" style={{ color: "#9c7b5e" }}>
+              <p
+                className="text-sm"
+                style={{ color: "var(--muted-foreground)" }}
+              >
                 {filteredContent.length}{" "}
                 {filteredContent.length === 1 ? "resultado" : "resultados"}
               </p>
@@ -307,7 +427,7 @@ const PublicacionesPage = () => {
               onClick={() => setShowCrearForm(!showCrearForm)}
               variant={showCrearForm ? "secondary" : "default"}
             >
-              {showCrearForm ? "✕ Cancelar" : "+ Nueva publicación"}
+              {showCrearForm ? "✕ Cancelar" : "+ Nuevo Reporte"}
             </Button>
           </div>
 
@@ -327,9 +447,15 @@ const PublicacionesPage = () => {
                 className="px-4 py-1.5 rounded-full text-sm font-medium border transition-all duration-200"
                 style={{
                   backgroundColor:
-                    filter === f.valor ? "#c1440e" : "transparent",
-                  color: filter === f.valor ? "#fff" : "#7a5c44",
-                  borderColor: filter === f.valor ? "#c1440e" : "#d4b8a0",
+                    filter === f.valor ? "var(--filter-active)" : "transparent",
+                  color:
+                    filter === f.valor
+                      ? "var(--primary-foreground)"
+                      : "var(--muted-foreground)",
+                  borderColor:
+                    filter === f.valor
+                      ? "var(--filter-active)"
+                      : "var(--border)",
                 }}
               >
                 {f.etiqueta}
@@ -339,12 +465,12 @@ const PublicacionesPage = () => {
             {/* Buscador — en desktop a la derecha, en mobile nueva fila alineado a la derecha */}
             <div
               className="ml-auto flex items-center gap-2 border rounded-full px-4 py-1.5 bg-white w-full md:w-auto"
-              style={{ borderColor: "#d4b8a0" }}
+              style={{ borderColor: "var(--border)" }}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-4 w-4 shrink-0"
-                style={{ color: "#9c7b5e" }}
+                style={{ color: "var(--muted-foreground)" }}
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -362,13 +488,13 @@ const PublicacionesPage = () => {
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
                 className="text-sm bg-transparent outline-none w-full md:w-48"
-                style={{ color: "#2c1a0e" }}
+                style={{ color: "var(--foreground)" }}
               />
               {busqueda && (
                 <button
                   onClick={() => setBusqueda("")}
                   className="text-xs shrink-0"
-                  style={{ color: "#9c7b5e" }}
+                  style={{ color: "var(--muted-foreground)" }}
                 >
                   ✕
                 </button>
@@ -406,7 +532,10 @@ const PublicacionesPage = () => {
                 </div>
               ) : (
                 <div className="text-center py-16">
-                  <p className="text-lg" style={{ color: "#9c7b5e" }}>
+                  <p
+                    className="text-lg"
+                    style={{ color: "var(--muted-foreground)" }}
+                  >
                     No hay publicaciones para mostrar.
                   </p>
                 </div>
