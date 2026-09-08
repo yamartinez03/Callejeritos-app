@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.2](https://github.com/yamartinez03/Callejeritos-app/compare/v0.0.1...v0.0.2) (2026-09-08)
+
+
+### Bug Fixes
+
+* corrijo visual para la sección crear usuario y inicio de sesión ([6538d71](https://github.com/yamartinez03/Callejeritos-app/commit/6538d710051cd566e62c4cbf1011f4af9b82c06d))
+
 ### 0.0.1 (2026-09-08)
 
 
