@@ -12,12 +12,19 @@ export default function FiltroTipo({ filtroActivo, onCambiarFiltro }) {
         <button
           key={f.valor}
           onClick={() => onCambiarFiltro(f.valor)}
-          className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors
-            ${
+          className="px-4 py-1.5 rounded-full text-sm font-medium border transition-all duration-200"
+          style={{
+            backgroundColor:
+              filtroActivo === f.valor ? "var(--filter-active)" : "transparent",
+            color:
               filtroActivo === f.valor
-                ? "bg-gray-900 text-white border-gray-900"
-                : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
-            }`}
+                ? "var(--primary-foreground)"
+                : "var(--muted-foreground)",
+            borderColor:
+              filtroActivo === f.valor
+                ? "var(--filter-active)"
+                : "var(--border)",
+          }}
         >
           {f.etiqueta}
         </button>

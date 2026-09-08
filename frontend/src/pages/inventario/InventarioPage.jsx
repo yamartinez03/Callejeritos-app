@@ -3,9 +3,6 @@ import { Button } from "@/components/ui/button";
 import TablaInsumos from "./components/TablaInsumos";
 import FiltroTipo from "./components/FiltroTipo";
 import DialogNuevoInsumo from "./components/DialogNuevoInsumo";
-import DialogMovimiento from "./components/DialogMovimiento";
-
-//cosas que me faltan revisar: el input de agregar insumo por tipo (alimento, medicamneto)
 
 // Datos de prueba hasta conectar con el backend
 const insumosMock = [
@@ -69,41 +66,43 @@ const insumosMock = [
 export default function InventarioPage() {
   const [filtro, setFiltro] = useState("todos");
   const [abrirNuevoInsumo, setAbrirNuevoInsumo] = useState(false);
-  const [insumoSeleccionado, setInsumoSeleccionado] = useState(null);
-  const [tipoMovimiento, setTipoMovimiento] = useState(null);
+  const [esAdmin, setEsAdmin] = useState(true); // Temporal: true para admin, false para usuario general--------------------- manejo de roles temporal
 
   const insumosFiltrados =
     filtro === "todos"
       ? insumosMock
       : insumosMock.filter((i) => i.tipo === filtro);
 
-  const handleMovimiento = (insumo, tipo) => {
-    setInsumoSeleccionado(insumo);
-    setTipoMovimiento(tipo);
+  const handleMovimiento = (insumo, tipo, cantidad, motivo) => {
+    // Aquí más adelante se enviará la cantidad y motivo al backend
+    console.log(
+      `Movimiento ${tipo} de ${cantidad} unidades para ${insumo.nombre}. Motivo: ${motivo}`,
+    );
   };
 
-  const cerrarMovimiento = () => {
-    setInsumoSeleccionado(null);
-    setTipoMovimiento(null);
+  const handleEliminar = (insumo) => {
+    // Aquí más adelante se enviará la eliminación al backend
+    console.log(`Eliminar insumo: ${insumo.nombre}`);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-black">Inventario</h1>
-          <p className="text-sm text-gray-500">
-            Medicamentos, alimentos e insumos
-          </p>
-        </div>
-        <Button onClick={() => setAbrirNuevoInsumo(true)}>
-          + Agregar insumo
-        </Button>
-      </div>
-
+    <div className="min-h-screen" style={{ backgroundColor: "var(--muted)" }}>
       {/* Contenido */}
       <div className="max-w-6xl mx-auto px-6 py-6">
+        {/* Título y botón */}
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-xl font-bold text-black">Inventario</h1>
+            <p className="text-sm text-gray-500">
+              Medicamentos, alimentos e insumos
+            </p>
+          </div>
+          {esAdmin && (
+            <Button onClick={() => setAbrirNuevoInsumo(true)}>
+              + Agregar insumo
+            </Button>
+          )}
+        </div>
         {/* Resumen de stock */}
         <div className="grid grid-cols-3 gap-4 mb-6">
           <div className="bg-white rounded-xl border border-gray-200 p-4">
@@ -140,23 +139,19 @@ export default function InventarioPage() {
         {/* Tabla */}
         <TablaInsumos
           insumos={insumosFiltrados}
-          onEntrada={(insumo) => handleMovimiento(insumo, "entrada")}
-          onSalida={(insumo) => handleMovimiento(insumo, "salida")}
+          onMovimiento={handleMovimiento}
+          onEliminar={handleEliminar}
+          esAdmin={esAdmin}
         />
       </div>
 
-      {/* Modales */}
-      <DialogNuevoInsumo
-        abierto={abrirNuevoInsumo}
-        onCerrar={() => setAbrirNuevoInsumo(false)}
-      />
-
-      <DialogMovimiento
-        abierto={!!insumoSeleccionado}
-        insumo={insumoSeleccionado}
-        tipo={tipoMovimiento}
-        onCerrar={cerrarMovimiento}
-      />
+      {/* Modal Nuevo Insumo - solo admin */}
+      {esAdmin && (
+        <DialogNuevoInsumo
+          abierto={abrirNuevoInsumo}
+          onCerrar={() => setAbrirNuevoInsumo(false)}
+        />
+      )}
     </div>
   );
 }

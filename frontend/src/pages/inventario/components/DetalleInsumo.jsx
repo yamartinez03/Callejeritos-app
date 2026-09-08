@@ -1,10 +1,10 @@
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 function DetallesMedicamento({ insumo }) {
   return (
@@ -81,22 +81,26 @@ function DetallesInsumo({ insumo }) {
   );
 }
 
-export default function DialogDetalleInsumo({ abierto, insumo, onCerrar }) {
+export default function PopoverDetalleInsumo({ insumo }) {
   if (!insumo) return null;
 
   return (
-    <Dialog open={abierto} onOpenChange={onCerrar}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {insumo.nombre}
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button size="sm" variant="outline">
+          Ver más
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80">
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <h4 className="font-semibold">{insumo.nombre}</h4>
             <Badge className="capitalize">{insumo.tipo}</Badge>
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="py-2">
+          </div>
+          <p className="text-sm text-gray-600">{insumo.descripcion}</p>
+          
           {/* Info común */}
-          <div className="grid grid-cols-2 gap-4 mb-4 pb-4 border-b border-gray-100">
+          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-200">
             <div>
               <p className="text-xs text-gray-500 mb-1">Stock actual</p>
               <p className="text-sm font-medium text-black">{insumo.stock}</p>
@@ -116,7 +120,7 @@ export default function DialogDetalleInsumo({ abierto, insumo, onCerrar }) {
           {insumo.tipo === "alimento" && <DetallesAlimento insumo={insumo} />}
           {insumo.tipo === "insumo" && <DetallesInsumo insumo={insumo} />}
         </div>
-      </DialogContent>
-    </Dialog>
+      </PopoverContent>
+    </Popover>
   );
 }
