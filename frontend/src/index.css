@@ -71,9 +71,7 @@
   --popover-foreground: oklch(0.329 0.016 75);
 
   /* Naranja terracota de la huella del logo */
-  --primary: oklch(
-    0.631 0.135 41
-  ); /*oklch(57.725% 0.19814 32.821) otra opcion-----------------------------------------------*/
+  --primary: oklch(0.631 0.135 41);
   --primary-foreground: oklch(0.99 0.01 85);
 
   /* Color del panel de marca (izquierda del login). Separado de --primary
@@ -105,9 +103,6 @@
   --danger-foreground: oklch(0.98 0.01 25);
   --info: oklch(0.57 0.087 247);
   --info-foreground: oklch(0.98 0.01 247);
-  
-  /* Color específico para filtros activos */
-  --filter-active: #c1440e;
 
   --chart-1: oklch(0.631 0.135 41);
   --chart-2: oklch(0.6 0.099 141);
