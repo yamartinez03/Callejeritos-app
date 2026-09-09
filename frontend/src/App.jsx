@@ -5,7 +5,8 @@ import viteLogo from './assets/vite.svg'
 import heroImg from './assets/hero.png'
 import './App.css'
 import { Routes,Route } from 'react-router-dom'
-import GastosPage  from './pages/gastos/GastosPage'
+import GastosOperativoPage  from './pages/gastos/GastosOperativoPage'
+import GastosTransitantePage  from './pages/gastos/GastosTransitantePage'
 
 function App() {
   return (
@@ -27,7 +28,8 @@ function App() {
 
       </main>
     <Routes>
-      <Route path="/gastos" element={< GastosPage/>}/>
+      <Route path="/gastosOperativo" element={< GastosOperativoPage />}/>
+      <Route path="/gastosTransitante" element={< GastosTransitantePage />}/>
     </Routes>
     </div>
     

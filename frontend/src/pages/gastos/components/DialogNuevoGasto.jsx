@@ -7,24 +7,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import SelectorAnimal from "./SelectorAnimal";
 
-// TODO: animal lo va a resolver el componente de búsqueda de otra compañera
-// (GCA_05). Mientras tanto, mock temporal.
-const animalesMock = [
-  { idanimal: 1, nombre: "Luna" },
-  { idanimal: 2, nombre: "Mochi" },
-  { idanimal: 3, nombre: "Tobi" },
-];
-
-// Reemplazar este mock por un fetch a
-// GET /api/tipos-gasto ni bien exista ese endpoint.
+// TODO: reemplazar por fetch a GET /api/tipos-gasto cuando el endpoint exista.
 const tiposGastoMock = [
   { idtipogasto: 1, nombre: "Consulta veterinaria" },
   { idtipogasto: 2, nombre: "Internación" },
@@ -41,12 +26,26 @@ const formVacio = {
   descripcion: "",
 };
 
-export default function DialogNuevoGasto({ abierto, onCerrar, onGuardar }) {
+/**
+ * DialogNuevoGasto
+ * Usamos un <select> nativo para el tipo de gasto para evitar el bug
+ * de shadcn Select que muestra el value (id) en vez del label (nombre)
+ * cuando el valor inicial no matchea ningún item al renderizar.
+ *
+ * @param {{ abierto, onCerrar, onGuardar, animales? }} props
+ */
+export default function DialogNuevoGasto({ abierto, onCerrar, onGuardar, animales }) {
   const [form, setForm] = useState(formVacio);
+  const [animalSeleccionado, setAnimalSeleccionado] = useState(null);
   const [comprobante, setComprobante] = useState(null);
 
   const setCampo = (campo, valor) =>
     setForm((prev) => ({ ...prev, [campo]: valor }));
+
+  const handleSeleccionarAnimal = (animal) => {
+    setAnimalSeleccionado(animal);
+    setCampo("idanimal", animal.idanimal);
+  };
 
   const handleGuardar = () => {
     if (
@@ -57,14 +56,10 @@ export default function DialogNuevoGasto({ abierto, onCerrar, onGuardar }) {
       !form.descripcion ||
       !comprobante
     ) {
-      // comprobante es obligatorio en el schema (String, sin "?")
-      alert("Completá todos los campos, incluido el comprobante.");
+      alert("Completá todos los campos obligatorios, incluido el comprobante.");
       return;
     }
 
-    const animal = animalesMock.find(
-      (a) => a.idanimal === Number(form.idanimal)
-    );
     const tipogasto = tiposGastoMock.find(
       (t) => t.idtipogasto === Number(form.idtipogasto)
     );
@@ -77,74 +72,77 @@ export default function DialogNuevoGasto({ abierto, onCerrar, onGuardar }) {
       descripcion: form.descripcion,
       comprobante: comprobante.name,
       reintegrado: false,
-      aceptado: null, // nace sin evaluar
-      animal, // desnormalizado solo para pintar la tabla sin pedir de nuevo
+      aceptado: null,
+      animal: animalSeleccionado,
       tipogasto,
     });
 
     setForm(formVacio);
+    setAnimalSeleccionado(null);
     setComprobante(null);
     onCerrar();
   };
 
   return (
     <Dialog open={abierto} onOpenChange={(open) => !open && onCerrar()}>
-      <DialogContent>
+      {/* max-w-xl hace el modal más ancho */}
+      <DialogContent className="max-w-xl">
         <DialogHeader>
           <DialogTitle>Registrar gasto</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-3">
+        <div className="space-y-4">
+          {/* Animal */}
           <div>
-            <label className="text-sm text-gray-500">Animal *</label>
-            <Select
-              value={form.idanimal}
-              onValueChange={(v) => setCampo("idanimal", v)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Seleccionar animal…" />
-              </SelectTrigger>
-              <SelectContent>
-                {animalesMock.map((a) => (
-                  <SelectItem key={a.idanimal} value={String(a.nombre)}>
-                    {a.nombre}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <label className="text-sm font-medium text-foreground block mb-1.5">
+              Animal *
+            </label>
+            <SelectorAnimal
+              animalSeleccionado={animalSeleccionado}
+              onSeleccionar={handleSeleccionarAnimal}
+              animales={animales}
+            />
           </div>
 
+          {/* Tipo de gasto — select nativo para evitar el bug del id */}
           <div>
-            <label className="text-sm text-gray-500">Tipo de gasto *</label>
-            <Select
+            <label className="text-sm font-medium text-foreground block mb-1.5">
+              Tipo de gasto *
+            </label>
+            <select
               value={form.idtipogasto}
-              onValueChange={(v) => setCampo("idtipogasto", v)}
+              onChange={(e) => setCampo("idtipogasto", e.target.value)}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Seleccionar tipo…" />
-              </SelectTrigger>
-              <SelectContent>
-                {tiposGastoMock.map((t) => (
-                  <SelectItem key={t.idtipogasto} value={String(t.nombre)}>
-                    {t.nombre}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <option value="" disabled>
+                Seleccionar tipo…
+              </option>
+              {tiposGastoMock.map((t) => (
+                <option key={t.idtipogasto} value={t.idtipogasto}>
+                  {t.nombre}
+                </option>
+              ))}
+            </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          {/* Monto y Fecha en dos columnas */}
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm text-gray-500">Monto ($) *</label>
+              <label className="text-sm font-medium text-foreground block mb-1.5">
+                Monto ($) *
+              </label>
               <Input
                 type="number"
                 min="0"
+                placeholder="0"
                 value={form.monto}
                 onChange={(e) => setCampo("monto", e.target.value)}
               />
             </div>
             <div>
-              <label className="text-sm text-gray-500">Fecha *</label>
+              <label className="text-sm font-medium text-foreground block mb-1.5">
+                Fecha *
+              </label>
               <Input
                 type="date"
                 value={form.fecha}
@@ -153,8 +151,11 @@ export default function DialogNuevoGasto({ abierto, onCerrar, onGuardar }) {
             </div>
           </div>
 
+          {/* Descripción */}
           <div>
-            <label className="text-sm text-gray-500">Descripción *</label>
+            <label className="text-sm font-medium text-foreground block mb-1.5">
+              Descripción *
+            </label>
             <Input
               value={form.descripcion}
               onChange={(e) => setCampo("descripcion", e.target.value)}
@@ -162,8 +163,11 @@ export default function DialogNuevoGasto({ abierto, onCerrar, onGuardar }) {
             />
           </div>
 
+          {/* Comprobante */}
           <div>
-            <label className="text-sm text-gray-500">Comprobante *</label>
+            <label className="text-sm font-medium text-foreground block mb-1.5">
+              Comprobante * (imagen o PDF)
+            </label>
             <Input
               type="file"
               accept="image/*,application/pdf"
@@ -171,7 +175,7 @@ export default function DialogNuevoGasto({ abierto, onCerrar, onGuardar }) {
             />
           </div>
 
-          <Button onClick={handleGuardar} className="w-full">
+          <Button onClick={handleGuardar} className="w-full" size="lg">
             Guardar gasto
           </Button>
         </div>
