@@ -2,11 +2,11 @@
 // reintegrado: false = pendiente de reintegro | true = reintegrado
 const filtros = [
   { valor: "todos", etiqueta: "Todos" },
-  { valor: "pendienteAprobar", etiqueta: "Pendiente de aprobar" },
+  { valor: "pendienteAprobar", etiqueta: "Pendiente para aprobar" },
   { valor: "aprobados", etiqueta: "Aprobados" },
   { valor: "rechazados", etiqueta: "Rechazados" },
   { valor: "reintegrados", etiqueta: "Reintegrados" },
-  { valor: "pendienteReintegro", etiqueta: "Pendiente de reintegro" },
+  { valor: "pendienteReintegro", etiqueta: "Pendiente para reintegro" },
 ];
 
 export default function FiltroEstado({ filtroActivo, onCambiarFiltro }) {

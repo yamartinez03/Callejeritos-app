@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef } from "react";
-import { Search, X, Loader2 } from "lucide-react";
+import { Search, X, Loader2, ClipboardList, PawPrint } from "lucide-react";
 
 const LIMITE_RESULTADOS = 8;
 const MINIMO_CHARS = 3;
 const DEBOUNCE_MS = 300;
 
 const vistas = [
-  { valor: "todos", etiqueta: "Todos los gastos", icon: "📋" },
-  { valor: "porAnimal", etiqueta: "Gastos por animal", icon: "🐾" },
+  { valor: "todos", etiqueta: "Todos", Icon: ClipboardList },
+  { valor: "porAnimal", etiqueta: "Filtrar por animal", Icon: PawPrint },
 ];
 
 const animalesMock = [
@@ -189,8 +189,7 @@ export default function FiltroVista({
                   : "bg-card text-foreground border-border hover:border-primary/50"
                 }`}
             >
-              <span>{v.icon}</span>
-              {/* Texto completo en sm, abreviado en mobile */}
+              <v.Icon className="w-4 h-4 flex-shrink-0" />
               <span className="hidden sm:inline">{v.etiqueta}</span>
               <span className="sm:hidden">
                 {v.valor === "todos" ? "Todos" : "Por animal"}

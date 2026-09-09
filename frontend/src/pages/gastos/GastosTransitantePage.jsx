@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Search } from "lucide-react";
 import KpisGastos from "./components/KpisGastos";
 import FiltroVista from "./components/FiltroVista";
 import FiltroEstado from "./components/FiltroEstado";
@@ -164,7 +165,7 @@ export default function GastosTransitantePage() {
               </>
             ) : (
               <div className="bg-card border border-border rounded-xl p-10 text-center text-muted-foreground">
-                <p className="text-4xl mb-2 opacity-40">🔍</p>
+                <Search className="w-10 h-10 mx-auto mb-2 opacity-40" />
                 <p className="text-sm">Buscá uno de tus animales para ver sus gastos.</p>
               </div>
             )}

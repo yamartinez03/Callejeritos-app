@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CheckCircle, Clock, XCircle, RefreshCw, BadgeCheck } from "lucide-react";
+import { CheckCircle, Clock, XCircle, RefreshCw, BadgeCheck, Cat, Dog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DialogConfirmarReintegro from "./DialogConfirmarReintegro";
 
@@ -149,10 +149,13 @@ export default function TarjetaGasto({
             }}
           />
           <div
-            className="w-16 h-16 rounded-lg bg-muted flex-shrink-0 items-center justify-center text-3xl hidden"
+            className="w-16 h-16 rounded-lg bg-muted flex-shrink-0 items-center justify-center hidden"
             aria-hidden
           >
-            {especie.includes("gato") ? "🐈" : "🐕"}
+            {especie.includes("gato")
+              ? <Cat className="w-8 h-8 text-muted-foreground" />
+              : <Dog className="w-8 h-8 text-muted-foreground" />
+            }
           </div>
 
           <div className="flex-1 flex gap-4 min-w-0">
