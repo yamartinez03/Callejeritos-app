@@ -60,7 +60,7 @@ function aplicarFiltroEstado(gastos, filtro) {
     case "aprobados":          return gastos.filter((g) => g.aceptado === true);
     case "rechazados":         return gastos.filter((g) => g.aceptado === false);
     case "reintegrados":       return gastos.filter((g) => g.reintegrado === true);
-    case "pendienteReintegro": return gastos.filter((g) => g.aceptado === true && g.reintegrado === false);
+    case "pendienteReintegro": return gastos.filter((g) => g.reintegrado === false);
     default:                   return gastos;
   }
 }
@@ -140,10 +140,10 @@ export default function GastosOperativoPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-card border-b border-border px-6 py-4 flex items-center justify-between">
+      <div className="bg-card border-b border-border px-4 py-4 flex items-center justify-between sm:px-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Control de Gastos</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-xl font-bold text-foreground sm:text-2xl">Control de Gastos</h1>
+          <p className="text-xs text-muted-foreground sm:text-sm">
             Gastos imputados por animal · Validación del núcleo operativo
           </p>
         </div>
@@ -152,7 +152,7 @@ export default function GastosOperativoPage() {
         </Button>
       </div>
 
-      <div className="max-w-5xl mx-auto px-6 py-8">
+      <div className="max-w-5xl mx-auto px-4 py-5 sm:px-6 sm:py-8">
         {/* KPIs */}
         <KpisGastos
           totalAcumulado={totalAcumulado}
@@ -198,8 +198,8 @@ export default function GastosOperativoPage() {
           <>
             {animalSeleccionado ? (
               <>
-                <CabeceraPorAnimal animal={animalSeleccionado} totalGastos={totalAnimal} />
                 <FiltroEstado filtroActivo={filtroEstado} onCambiarFiltro={setFiltroEstado} />
+                <CabeceraPorAnimal animal={animalSeleccionado} totalGastos={totalAnimal} />
                 <ListaGastosAnimal
                   gastos={gastosPorAnimal}
                   onAceptar={handleAceptar}

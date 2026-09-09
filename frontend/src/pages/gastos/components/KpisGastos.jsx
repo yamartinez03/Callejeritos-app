@@ -35,11 +35,6 @@ const kpiConfig = [
   },
 ];
 
-/**
- * KpisGastos
- * Compartido entre GastosOperativoPage y GastosTransitantePage.
- * Usa íconos de lucide-react.
- */
 export default function KpisGastos({
   totalAcumulado,
   reintegrado,
@@ -49,7 +44,8 @@ export default function KpisGastos({
   const valores = { totalAcumulado, reintegrado, pendienteReintegro, pendienteAprobar };
 
   return (
-    <div className="grid grid-cols-2 gap-4 mb-6 lg:grid-cols-4">
+    // Mobile: 1 col | sm: 2 cols | lg: 4 cols
+    <div className="grid grid-cols-1 gap-3 mb-6 sm:grid-cols-2 lg:grid-cols-4">
       {kpiConfig.map(({ key, label, Icon, iconBg, iconColor, formato }) => (
         <div
           key={key}

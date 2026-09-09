@@ -10,9 +10,6 @@ const vistas = [
   { valor: "porAnimal", etiqueta: "Gastos por animal", icon: "🐾" },
 ];
 
-// TODO: reemplazar por fetch a GET /api/animales?nombre=<query>&limit=8
-// cuando el endpoint esté disponible en animalController.js.
-// El mock simula el mismo comportamiento: filtra por nombre y limita a 8.
 const animalesMock = [
   { idanimal: 1, nombre: "Luna", especieanimal: { nombre: "Perro" }, sexo: "HEMBRA", edadestimada: 2, fotoUrl: null },
   { idanimal: 2, nombre: "Mochi", especieanimal: { nombre: "Gato" }, sexo: "HEMBRA", edadestimada: 1, fotoUrl: null },
@@ -27,13 +24,7 @@ const animalesMock = [
 ];
 
 async function buscarAnimales(query) {
-  // Simula latencia de red con el mock
   await new Promise((resolve) => setTimeout(resolve, 150));
-
-  // TODO: reemplazar por:
-  // const res = await fetch(`/api/animales?nombre=${query}&limit=${LIMITE_RESULTADOS}`);
-  // return await res.json();
-
   return animalesMock
     .filter((a) => a.nombre.toLowerCase().includes(query.toLowerCase()))
     .slice(0, LIMITE_RESULTADOS);
@@ -45,11 +36,6 @@ function fotoPlaceholder(especie) {
     : "https://placedog.net/40/40";
 }
 
-/**
- * BuscadorAnimal
- * Input con debounce, mínimo de caracteres, dropdown con foto + nombre,
- * límite de 8 resultados y mensaje si hay más.
- */
 function BuscadorAnimal({ onSeleccionar, animalSeleccionado, onLimpiar, animalesPropios }) {
   const [query, setQuery] = useState("");
   const [resultados, setResultados] = useState([]);
@@ -59,7 +45,6 @@ function BuscadorAnimal({ onSeleccionar, animalSeleccionado, onLimpiar, animales
   const debounceRef = useRef(null);
   const contenedorRef = useRef(null);
 
-  // Cierra el dropdown al hacer click afuera
   useEffect(() => {
     function handleClickFuera(e) {
       if (contenedorRef.current && !contenedorRef.current.contains(e.target)) {
@@ -73,30 +58,12 @@ function BuscadorAnimal({ onSeleccionar, animalSeleccionado, onLimpiar, animales
   const handleChange = (e) => {
     const texto = e.target.value;
     setQuery(texto);
-
-    // Limpia el animal seleccionado si el usuario borra el texto
-    if (!texto) {
-      onLimpiar();
-      setResultados([]);
-      setAbierto(false);
-      return;
-    }
-
-    // Menos de 3 caracteres: no busca todavía
-    if (texto.length < MINIMO_CHARS) {
-      setResultados([]);
-      setAbierto(false);
-      setCargando(false);
-      return;
-    }
-
-    // Debounce: espera 300ms antes de buscar
+    if (!texto) { onLimpiar(); setResultados([]); setAbierto(false); return; }
+    if (texto.length < MINIMO_CHARS) { setResultados([]); setAbierto(false); setCargando(false); return; }
     setCargando(true);
     setAbierto(true);
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
-      // Si hay animalesPropios (transitante), filtra sobre ellos localmente
-      // Si no, usa la función buscarAnimales (operativo → API o mock)
       let encontrados;
       if (animalesPropios) {
         encontrados = animalesPropios
@@ -105,14 +72,9 @@ function BuscadorAnimal({ onSeleccionar, animalSeleccionado, onLimpiar, animales
       } else {
         encontrados = await buscarAnimales(texto);
       }
-
-      // Detecta si hay más resultados de los que mostramos
       const totalPosibles = animalesPropios
-        ? animalesPropios.filter((a) =>
-            a.nombre.toLowerCase().includes(texto.toLowerCase())
-          ).length
-        : encontrados.length; // con API real esto vendría en la respuesta
-
+        ? animalesPropios.filter((a) => a.nombre.toLowerCase().includes(texto.toLowerCase())).length
+        : encontrados.length;
       setResultados(encontrados);
       setHayMas(totalPosibles > LIMITE_RESULTADOS);
       setCargando(false);
@@ -134,8 +96,8 @@ function BuscadorAnimal({ onSeleccionar, animalSeleccionado, onLimpiar, animales
   };
 
   return (
-    <div ref={contenedorRef} className="relative flex-1 min-w-[240px] max-w-sm">
-      {/* Input */}
+    // Mobile: ancho completo | sm: flex-1 con max-w
+    <div ref={contenedorRef} className="relative w-full sm:flex-1 sm:min-w-[240px] sm:max-w-sm">
       <div className="relative">
         {cargando
           ? <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground animate-spin" />
@@ -158,61 +120,39 @@ function BuscadorAnimal({ onSeleccionar, animalSeleccionado, onLimpiar, animales
           </button>
         )}
       </div>
-
-      {/* Hint: menos de 3 caracteres */}
       {query.length > 0 && query.length < MINIMO_CHARS && (
         <p className="absolute mt-1 text-xs text-muted-foreground pl-1">
           Escribí al menos {MINIMO_CHARS} letras para buscar.
         </p>
       )}
-
-      {/* Dropdown de resultados */}
       {abierto && query.length >= MINIMO_CHARS && (
         <div className="absolute z-20 mt-1 w-full bg-card border border-border rounded-lg shadow-lg overflow-hidden">
           {cargando && (
-            <div className="px-4 py-3 text-sm text-muted-foreground text-center">
-              Buscando...
-            </div>
+            <div className="px-4 py-3 text-sm text-muted-foreground text-center">Buscando...</div>
           )}
-
           {!cargando && resultados.length === 0 && (
-            <div className="px-4 py-3 text-sm text-muted-foreground text-center">
-              No se encontraron animales.
-            </div>
+            <div className="px-4 py-3 text-sm text-muted-foreground text-center">No se encontraron animales.</div>
           )}
-
           {!cargando && resultados.map((animal) => {
             const especie = animal.especieanimal?.nombre ?? "";
             const foto = animal.fotoUrl ?? fotoPlaceholder(especie);
             const sexo = animal.sexo === "MACHO" ? "Macho" : "Hembra";
-
             return (
               <button
                 key={animal.idanimal}
                 onMouseDown={() => handleSeleccionar(animal)}
                 className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-muted text-left transition-colors border-b border-border last:border-0"
               >
-                <img
-                  src={foto}
-                  alt={animal.nombre}
-                  className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
-                  onError={(e) => { e.currentTarget.src = ""; }}
-                />
+                <img src={foto} alt={animal.nombre} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-semibold text-foreground">
-                    {animal.nombre}
-                  </p>
+                  <p className="text-sm font-semibold text-foreground">{animal.nombre}</p>
                   <p className="text-xs text-muted-foreground">
-                    {[especie, sexo, animal.edadestimada && `${animal.edadestimada} años`]
-                      .filter(Boolean)
-                      .join(" · ")}
+                    {[especie, sexo, animal.edadestimada && `${animal.edadestimada} años`].filter(Boolean).join(" · ")}
                   </p>
                 </div>
               </button>
             );
           })}
-
-          {/* Mensaje de límite */}
           {!cargando && hayMas && (
             <div className="px-4 py-2 text-xs text-muted-foreground text-center bg-muted border-t border-border">
               Mostrando {LIMITE_RESULTADOS} resultados · Refiná la búsqueda para ver más
@@ -224,10 +164,6 @@ function BuscadorAnimal({ onSeleccionar, animalSeleccionado, onLimpiar, animales
   );
 }
 
-/**
- * FiltroVista
- * Botones de vista + BuscadorAnimal integrado en la misma línea.
- */
 export default function FiltroVista({
   vistaActiva,
   onCambiarVista,
@@ -237,27 +173,34 @@ export default function FiltroVista({
   animalesPropios,
 }) {
   return (
-    <div className="flex items-center gap-3 mb-6 flex-wrap">
-      {vistas.map((v) => {
-        const activa = vistaActiva === v.valor;
-        return (
-          <button
-            key={v.valor}
-            onClick={() => onCambiarVista(v.valor)}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-lg border font-medium text-sm transition-colors flex-shrink-0
-              ${
-                activa
+    // Mobile: columna vertical | sm: fila horizontal
+    <div className="flex flex-col gap-3 mb-6 sm:flex-row sm:items-center">
+      {/* Botones de vista — en mobile ocupan todo el ancho */}
+      <div className="flex gap-2">
+        {vistas.map((v) => {
+          const activa = vistaActiva === v.valor;
+          return (
+            <button
+              key={v.valor}
+              onClick={() => onCambiarVista(v.valor)}
+              className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border font-medium text-sm transition-colors
+                ${activa
                   ? "bg-primary text-primary-foreground border-primary"
                   : "bg-card text-foreground border-border hover:border-primary/50"
-              }`}
-          >
-            <span>{v.icon}</span>
-            {v.etiqueta}
-          </button>
-        );
-      })}
+                }`}
+            >
+              <span>{v.icon}</span>
+              {/* Texto completo en sm, abreviado en mobile */}
+              <span className="hidden sm:inline">{v.etiqueta}</span>
+              <span className="sm:hidden">
+                {v.valor === "todos" ? "Todos" : "Por animal"}
+              </span>
+            </button>
+          );
+        })}
+      </div>
 
-      {/* Buscador — solo visible en vista "porAnimal" */}
+      {/* Buscador — ancho completo en mobile, junto a botones en sm */}
       {vistaActiva === "porAnimal" && (
         <BuscadorAnimal
           animalSeleccionado={animalSeleccionado}
