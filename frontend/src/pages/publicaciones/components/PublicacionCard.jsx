@@ -76,7 +76,10 @@ const PublicacionCard = ({ item }) => {
   const multiplePhotos = fotos.length > 1;
 
   return (
-    <Card className="hover:shadow-md transition-shadow overflow-hidden">
+    <Card
+      className="hover:shadow-md transition-shadow overflow-hidden"
+      style={{ backgroundColor: "var(--card)" }}
+    >
       <CardContent className="p-0">
         {/* Badge de tipo */}
         <div className="flex justify-end items-center gap-2 py-3">
@@ -150,42 +153,42 @@ const PublicacionCard = ({ item }) => {
           {esAnimalDetallado && animalData ? (
             <div>
               <div className="flex items-baseline gap-2">
-                <h3 className="text-lg font-semibold text-gray-900">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                   {animalData.nombre}
                 </h3>
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-gray-600 dark:text-gray-300">
                   - {animalData.especie}
                 </span>
               </div>
 
               <div className="grid grid-cols-2 gap-2 text-sm mt-2">
                 <div>
-                  <span className="text-gray-500">Sexo:</span>
-                  <span className="ml-1 text-gray-700">{animalData.sexo}</span>
+                  <span className="text-gray-500 dark:text-gray-400">Sexo:</span>
+                  <span className="ml-1 text-gray-700 dark:text-gray-200">{animalData.sexo}</span>
                 </div>
                 <div>
-                  <span className="text-gray-500">Edad:</span>
-                  <span className="ml-1 text-gray-700">
+                  <span className="text-gray-500 dark:text-gray-400">Edad:</span>
+                  <span className="ml-1 text-gray-700 dark:text-gray-200">
                     {animalData.edadestimada} años
                   </span>
                 </div>
                 <div>
-                  <span className="text-gray-500">Peso:</span>
-                  <span className="ml-1 text-gray-700">
+                  <span className="text-gray-500 dark:text-gray-400">Peso:</span>
+                  <span className="ml-1 text-gray-700 dark:text-gray-200">
                     {animalData.peso} kg
                   </span>
                 </div>
                 <div>
-                  <span className="text-gray-500">Castrado:</span>
-                  <span className="ml-1 text-gray-700">
+                  <span className="text-gray-500 dark:text-gray-400">Castrado:</span>
+                  <span className="ml-1 text-gray-700 dark:text-gray-200">
                     {animalData.castrado ? "Sí" : "No"}
                   </span>
                 </div>
               </div>
 
               <div className="text-sm mt-1">
-                <span className="text-gray-500">Color:</span>
-                <span className="ml-1 text-gray-700">
+                <span className="text-gray-500 dark:text-gray-400">Color:</span>
+                <span className="ml-1 text-gray-700 dark:text-gray-200">
                   {animalData.colorpelaje}
                 </span>
               </div>
@@ -200,19 +203,19 @@ const PublicacionCard = ({ item }) => {
             </div>
           ) : (
             /* Vista regular para PERDIDO / ENCONTRADO / AVISTAMIENTO */
-            descripcion && <p className="text-gray-700">{descripcion}</p>
+            descripcion && <p className="text-gray-700 dark:text-gray-200">{descripcion}</p>
           )}
 
           {/* Ubicación y Fecha unificadas */}
           {ubicacion && (
-            <div className="flex items-center gap-2 text-sm text-gray-600">
+            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
               <span className="font-medium">Ubicación:</span>
               <span>{ubicacion}</span>
             </div>
           )}
 
           {fecha && (
-            <div className="flex items-center gap-2 text-sm text-gray-600">
+            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
               <span className="font-medium">
                 {item.idanimal ? "Ingreso:" : "Fecha:"}
               </span>
@@ -232,19 +235,19 @@ const PublicacionCard = ({ item }) => {
               item.emailVisitante ||
               item.telefonoVisitante) && (
               <div className="pt-3 border-t border-gray-200">
-                <p className="text-sm font-medium text-gray-700 mb-1">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                   Contacto:
                 </p>
                 {item.nombreVisitante && (
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
                     {item.nombreVisitante}
                   </p>
                 )}
                 {item.emailVisitante && (
-                  <p className="text-sm text-gray-600">{item.emailVisitante}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">{item.emailVisitante}</p>
                 )}
                 {item.telefonoVisitante && (
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
                     {item.telefonoVisitante}
                   </p>
                 )}

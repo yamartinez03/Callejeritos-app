@@ -69,15 +69,17 @@ const CrearPublicacionForm = ({ onSubmit, onCancel }) => {
   };
 
   return (
-    <Card className="max-w-5xl mx-auto">
+    <Card className="max-w-5xl mx-auto" style={{ backgroundColor: "var(--card)" }}>
       <CardHeader>
-        <CardTitle>Crear Nueva Publicación</CardTitle>
+        <CardTitle style={{ color: "var(--card-foreground)" }}>
+          Crear Nueva Publicación
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Tipo de Publicación */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium mb-1" style={{ color: "var(--card-foreground)" }}>
               Tipo de Publicación
             </label>
             <Select
@@ -93,32 +95,36 @@ const CrearPublicacionForm = ({ onSubmit, onCancel }) => {
           </div>
 
           {/* Subida de Imágenes */}
-          <div className="border-t pt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+          <div className="border-t pt-4" style={{ borderColor: "var(--border)" }}>
+            <label className="block text-sm font-medium mb-1" style={{ color: "var(--card-foreground)" }}>
               Fotos del animal
             </label>
 
             <label
               className={`inline-flex items-center gap-2 px-4 py-2 border rounded-md text-sm font-medium transition-colors ${
                 fotos.length >= 3
-                  ? "bg-gray-200 text-gray-400 border-gray-200 cursor-not-allowed"
+                  ? "cursor-not-allowed"
                   : fotos.length > 0
                     ? "cursor-pointer"
                     : "cursor-pointer"
               }`}
               style={
                 fotos.length >= 3
-                  ? {}
+                  ? {
+                      backgroundColor: "var(--muted)",
+                      color: "var(--muted-foreground)",
+                      borderColor: "var(--border)",
+                    }
                   : fotos.length > 0
                     ? {
-                        backgroundColor: "#f0e6dc",
-                        color: "#d67526",
-                        borderColor: "#d4b8a0",
+                        backgroundColor: "var(--secondary)",
+                        color: "var(--secondary-foreground)",
+                        borderColor: "var(--border)",
                       }
                     : {
-                        backgroundColor: "#c1440e",
-                        color: "#ffffff",
-                        borderColor: "#c1440e",
+                        backgroundColor: "var(--primary)",
+                        color: "var(--primary-foreground)",
+                        borderColor: "var(--primary)",
                       }
               }
             >
@@ -136,15 +142,15 @@ const CrearPublicacionForm = ({ onSubmit, onCancel }) => {
             {/* Texto dinámico que cambia de estado */}
             <div className="mt-2 text-xs">
               {fotos.length === 0 ? (
-                <p className="text-gray-500">
+                <p style={{ color: "var(--muted-foreground)" }}>
                   Ninguna foto seleccionada aún (máx. 3).
                 </p>
               ) : fotos.length >= 3 ? (
-                <p className="text-amber-600 font-medium">
+                <p className="font-medium" style={{ color: "var(--warning)" }}>
                   ✓ Haz alcanzado el límite máximo de 3 fotos.
                 </p>
               ) : (
-                <p className="text-green-600 font-medium">
+                <p className="font-medium" style={{ color: "var(--success)" }}>
                   ✓ {fotos.length}{" "}
                   {fotos.length === 1 ? "foto cargada" : "fotos cargadas"}.
                   Puedes agregar {3 - fotos.length} más.
@@ -180,7 +186,7 @@ const CrearPublicacionForm = ({ onSubmit, onCancel }) => {
 
           {/* Descripción */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium mb-1" style={{ color: "var(--card-foreground)" }}>
               Descripción
             </label>
             <Textarea
@@ -192,12 +198,12 @@ const CrearPublicacionForm = ({ onSubmit, onCancel }) => {
               required
               maxLength={500}
             />
-            <p className="text-xs text-gray-500 mt-1">Máximo 500 caracteres</p>
+            <p className="text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>Máximo 500 caracteres</p>
           </div>
 
           {/* Zona */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium mb-1" style={{ color: "var(--card-foreground)" }}>
               Zona / Ubicación
             </label>
             <Input
@@ -208,12 +214,12 @@ const CrearPublicacionForm = ({ onSubmit, onCancel }) => {
               required
               maxLength={100}
             />
-            <p className="text-xs text-gray-500 mt-1">Máximo 100 caracteres</p>
+            <p className="text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>Máximo 100 caracteres</p>
           </div>
 
           {/* Fecha */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium mb-1" style={{ color: "var(--card-foreground)" }}>
               Fecha
             </label>
             <Input
@@ -236,7 +242,7 @@ const CrearPublicacionForm = ({ onSubmit, onCancel }) => {
 
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium mb-1" style={{ color: "var(--card-foreground)" }}>
                   Nombre (opcional)
                 </label>
                 <Input
@@ -249,7 +255,7 @@ const CrearPublicacionForm = ({ onSubmit, onCancel }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium mb-1" style={{ color: "var(--card-foreground)" }}>
                   Email *
                 </label>
                 <Input
@@ -263,7 +269,7 @@ const CrearPublicacionForm = ({ onSubmit, onCancel }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium mb-1" style={{ color: "var(--card-foreground)" }}>
                   Teléfono *
                 </label>
                 <Input

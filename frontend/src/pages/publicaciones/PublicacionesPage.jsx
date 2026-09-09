@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import PublicacionCard from "./components/PublicacionCard";
 import CrearPublicacionForm from "./components/CrearPublicacionForm";
@@ -190,6 +192,7 @@ const ANIMALES_MOCK = [
 ];
 
 const PublicacionesPage = () => {
+  const navigate = useNavigate();
   const [filter, setFilter] = useState("TODOS");
   const [showCrearForm, setShowCrearForm] = useState(false);
   const [allContent, setAllContent] = useState([
@@ -318,7 +321,12 @@ const PublicacionesPage = () => {
             </h1>
           </div>
         </div>
-        <Button className="font-semibold">Iniciar sesión</Button>
+        <div className="flex gap-2">
+          <ThemeToggle />
+          <Button className="font-semibold" onClick={() => navigate("/login")}>
+            Iniciar sesión
+          </Button>
+        </div>
       </nav>
 
       {/* Hero Section con Carrusel */}
@@ -336,7 +344,19 @@ const PublicacionesPage = () => {
           {/* Controles del carrusel */}
           <button
             onClick={prevHeroSlide}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-white/40 text-white p-3 rounded-full transition-colors"
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full transition-colors"
+            style={{
+              backgroundColor: "rgba(255, 255, 255, 0.2)",
+              color: "white",
+            }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.backgroundColor =
+                "rgba(255, 255, 255, 0.4)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.backgroundColor =
+                "rgba(255, 255, 255, 0.2)")
+            }
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -353,7 +373,19 @@ const PublicacionesPage = () => {
 
           <button
             onClick={nextHeroSlide}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-white/40 text-white p-3 rounded-full transition-colors"
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full transition-colors"
+            style={{
+              backgroundColor: "rgba(255, 255, 255, 0.2)",
+              color: "white",
+            }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.backgroundColor =
+                "rgba(255, 255, 255, 0.4)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.backgroundColor =
+                "rgba(255, 255, 255, 0.2)")
+            }
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -374,9 +406,13 @@ const PublicacionesPage = () => {
               <button
                 key={index}
                 onClick={() => setCurrentHeroSlide(index)}
-                className={`w-2 h-2 rounded-full transition-colors ${
-                  index === currentHeroSlide ? "bg-white" : "bg-white/50"
-                }`}
+                className="w-2 h-2 rounded-full transition-colors"
+                style={{
+                  backgroundColor:
+                    index === currentHeroSlide
+                      ? "white"
+                      : "rgba(255, 255, 255, 0.5)",
+                }}
               />
             ))}
           </div>
@@ -390,7 +426,7 @@ const PublicacionesPage = () => {
                 {heroSlides[currentHeroSlide].description}
               </p>
               <button className="font-semibold px-6 py-3 text-lg border-2 border-white text-white rounded-lg hover:bg-white/10 transition-colors">
-                Conocer Más
+                Donaciones
               </button>
             </div>
           </div>
@@ -447,15 +483,13 @@ const PublicacionesPage = () => {
                 className="px-4 py-1.5 rounded-full text-sm font-medium border transition-all duration-200"
                 style={{
                   backgroundColor:
-                    filter === f.valor ? "var(--filter-active)" : "transparent",
+                    filter === f.valor ? "var(--primary)" : "transparent",
                   color:
                     filter === f.valor
                       ? "var(--primary-foreground)"
                       : "var(--muted-foreground)",
                   borderColor:
-                    filter === f.valor
-                      ? "var(--filter-active)"
-                      : "var(--border)",
+                    filter === f.valor ? "var(--primary)" : "var(--border)",
                 }}
               >
                 {f.etiqueta}
@@ -464,8 +498,11 @@ const PublicacionesPage = () => {
 
             {/* Buscador — en desktop a la derecha, en mobile nueva fila alineado a la derecha */}
             <div
-              className="ml-auto flex items-center gap-2 border rounded-full px-4 py-1.5 bg-white w-full md:w-auto"
-              style={{ borderColor: "var(--border)" }}
+              className="ml-auto flex items-center gap-2 border rounded-full px-4 py-1.5 w-full md:w-auto"
+              style={{
+                borderColor: "var(--border)",
+                backgroundColor: "var(--card)",
+              }}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"

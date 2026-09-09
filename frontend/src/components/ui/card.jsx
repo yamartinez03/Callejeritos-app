@@ -2,7 +2,11 @@ import { clsx } from 'clsx'
 
 const Card = ({ className, ...props }) => (
   <div
-    className={clsx('rounded-lg border border-gray-200 bg-white shadow-sm', className)}
+    className={clsx('rounded-lg border shadow-sm', className)}
+    style={{
+      backgroundColor: 'var(--card)',
+      borderColor: 'var(--border)',
+    }}
     {...props}
   />
 )
@@ -16,7 +20,8 @@ const CardHeader = ({ className, ...props }) => (
 
 const CardTitle = ({ className, ...props }) => (
   <h3
-    className={clsx('text-2xl font-semibold leading-none tracking-tight text-gray-900', className)}
+    className={clsx('text-2xl font-semibold leading-none tracking-tight', className)}
+    style={{ color: 'var(--card-foreground)' }}
     {...props}
   />
 )

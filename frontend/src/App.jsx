@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -8,6 +8,7 @@ import Login from "./Login/pages/Login";
 import LoginSuccess from "./Login/pages/LoginSuccess";
 import Registro from "./Login/pages/Registro";
 import Unauthorized from "./pages/Unauthorized";
+import PublicacionesPage from "./pages/publicaciones/PublicacionesPage";
 
 // No olvidarme de reemplazar  estos placeholders por pantallas reales cuando las chicas las tengan
 function Dashboard() {
@@ -86,6 +87,10 @@ function AppRoutes() {
 
   return (
     <Routes>
+      {/* Ruta pública - página principal */}
+      <Route path="/" element={<PublicacionesPage />} />
+
+      {/* Rutas de autenticación */}
       <Route path="/login" element={<Login onSubmit={handleLogin} />} />
       <Route
         path="/registro"
@@ -93,9 +98,9 @@ function AppRoutes() {
       />
       <Route path="/no-autorizado" element={<Unauthorized />} />
 
-      {/* cualquier usuario logueado, sin importar el rol */}
+      {/* Rutas protegidas */}
       <Route
-        path="/"
+        path="/dashboard"
         element={
           <ProtectedRoute>
             <Dashboard />
@@ -117,12 +122,10 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <ThemeProvider>
-        <AuthProvider>
-          <AppRoutes />
-        </AuthProvider>
-      </ThemeProvider>
-    </BrowserRouter>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
