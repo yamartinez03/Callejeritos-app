@@ -3,11 +3,14 @@ import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ToastProvider } from "@/components/toast";
 import { STAFF_ROLES } from "@/lib/roles";
 import Login from "./Login/pages/Login";
-import LoginSuccess from "./Login/pages/LoginSuccess";
+import LoginSuccess from "./Login/pages/Loginsuccess";
 import Registro from "./Login/pages/Registro";
 import Unauthorized from "./pages/Unauthorized";
+import AlertasPage from "@/Alertas/pages/AlertasPage";
+import VeterinariasPage from "@/Veterinarias/pages/VeterinariasPage";
 
 // No olvidarme de reemplazar  estos placeholders por pantallas reales cuando las chicas las tengan 
 function Dashboard() {
@@ -108,6 +111,22 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/alertas"
+        element={
+          <ProtectedRoute allowedRoles={STAFF_ROLES}>
+            <AlertasPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/veterinarias"
+        element={
+          <ProtectedRoute allowedRoles={STAFF_ROLES}>
+            <VeterinariasPage />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   );
 }
@@ -117,7 +136,9 @@ export default function App() {
     <BrowserRouter>
       <ThemeProvider>
         <AuthProvider>
-          <AppRoutes />
+          <ToastProvider>
+            <AppRoutes />
+          </ToastProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>
