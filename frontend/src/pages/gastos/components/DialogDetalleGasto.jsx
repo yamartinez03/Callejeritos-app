@@ -1,10 +1,13 @@
-import { FileText, Image, Clock, CheckCircle, XCircle } from "lucide-react";
+import { useState } from "react";
+import { Clock, CheckCircle, XCircle, Receipt } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import DialogVisorComprobante from "./DialogVisorComprobante";
 
 // aceptado: null = pendiente | true = aprobado | false = rechazado
 function EstadoGasto({ aceptado }) {
@@ -30,21 +33,12 @@ function EstadoGasto({ aceptado }) {
   );
 }
 
-// Ícono según extensión del archivo
-function IconoComprobante({ nombre }) {
-  const esPDF = nombre?.toLowerCase().endsWith(".pdf");
-  if (esPDF)
-    return <FileText className="w-5 h-5 text-danger flex-shrink-0" />;
-  return <Image className="w-5 h-5 text-info flex-shrink-0" />;
-}
-
 function fotoPlaceholder(especie) {
   const s = (especie ?? "").toLowerCase();
   if (s.includes("gato")) return "https://placekitten.com/80/80";
   return "https://placedog.net/80/80";
 }
 
-// Fila de dato: label a la izquierda, valor a la derecha
 function FilaDato({ label, children }) {
   return (
     <div className="flex items-start justify-between gap-4 py-2 border-b border-border last:border-0">
@@ -57,8 +51,11 @@ function FilaDato({ label, children }) {
 /**
  * DialogDetalleGasto
  * Compartido entre GastosOperativoPage y GastosTransitantePage.
+ * El visor del comprobante se abre en un modal separado (DialogVisorComprobante).
  */
 export default function DialogDetalleGasto({ abierto, gasto, onCerrar }) {
+  const [visorAbierto, setVisorAbierto] = useState(false);
+
   if (!gasto) return null;
 
   const especie = gasto.animal?.especieanimal?.nombre ?? "";
@@ -69,62 +66,62 @@ export default function DialogDetalleGasto({ abierto, gasto, onCerrar }) {
     : null;
 
   return (
-    <Dialog open={abierto} onOpenChange={(open) => !open && onCerrar()}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Detalle del gasto</DialogTitle>
-        </DialogHeader>
+    <>
+      <Dialog open={abierto} onOpenChange={(open) => !open && onCerrar()}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Detalle del gasto</DialogTitle>
+          </DialogHeader>
 
-        {/* Sección animal */}
-        <div className="flex items-center gap-3 bg-muted rounded-lg p-3 mb-2">
-          <img
-            src={foto}
-            alt={gasto.animal?.nombre}
-            className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
-          />
-          <div>
-            <p className="font-bold text-foreground">{gasto.animal?.nombre}</p>
-            <p className="text-xs text-muted-foreground">
-              {[especie, sexo, edad].filter(Boolean).join(" · ")}
-            </p>
+          {/* Sección animal */}
+          <div className="flex items-center gap-3 bg-muted rounded-lg p-3 mb-2">
+            <img
+              src={foto}
+              alt={gasto.animal?.nombre}
+              className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+            />
+            <div>
+              <p className="font-bold text-foreground">{gasto.animal?.nombre}</p>
+              <p className="text-xs text-muted-foreground">
+                {[especie, sexo, edad].filter(Boolean).join(" · ")}
+              </p>
+            </div>
           </div>
-        </div>
 
-        {/* Datos del gasto — lista vertical */}
-        <div className="divide-y divide-border">
-          <FilaDato label="Tipo de gasto">
-            {gasto.tipogasto?.nombre}
-          </FilaDato>
-          <FilaDato label="Descripción">
-            {gasto.descripcion}
-          </FilaDato>
-          <FilaDato label="Monto">
-            <span className="font-bold">
-              ${Number(gasto.monto).toLocaleString("es-AR")}
-            </span>
-          </FilaDato>
-          <FilaDato label="Fecha">{gasto.fecha}</FilaDato>
-          <FilaDato label="Reintegrado">
-            {gasto.reintegrado ? "Sí" : "No"}
-          </FilaDato>
-          <FilaDato label="Estado">
-            <EstadoGasto aceptado={gasto.aceptado} />
-          </FilaDato>
-        </div>
-
-        {/* Comprobante — Opción A: ícono + nombre, sin visor */}
-        <div className="mt-3 flex items-center gap-2 bg-muted rounded-lg px-3 py-2">
-          <IconoComprobante nombre={gasto.comprobante} />
-          <div>
-            <p className="text-xs text-muted-foreground">Comprobante adjunto</p>
-            <p className="text-sm text-foreground font-medium">
-              {gasto.comprobante}
-            </p>
+          {/* Datos del gasto */}
+          <div className="divide-y divide-border">
+            <FilaDato label="Tipo de gasto">{gasto.tipogasto?.nombre}</FilaDato>
+            <FilaDato label="Descripción">{gasto.descripcion}</FilaDato>
+            <FilaDato label="Monto">
+              <span className="font-bold">
+                ${Number(gasto.monto).toLocaleString("es-AR")}
+              </span>
+            </FilaDato>
+            <FilaDato label="Fecha">{gasto.fecha}</FilaDato>
+            <FilaDato label="Reintegrado">{gasto.reintegrado ? "Sí" : "No"}</FilaDato>
+            <FilaDato label="Estado">
+              <EstadoGasto aceptado={gasto.aceptado} />
+            </FilaDato>
           </div>
-        </div>
-        {/* TODO: cuando el backend defina GET /api/comprobantes/:filename,
-            reemplazar el bloque anterior por un <img> o <iframe> con esa URL */}
-      </DialogContent>
-    </Dialog>
+
+          {/* Botón para abrir el visor del comprobante */}
+          <Button
+            variant="outline"
+            className="w-full mt-2"
+            onClick={() => setVisorAbierto(true)}
+          >
+            <Receipt className="w-4 h-4 mr-2" />
+            Ver comprobante
+          </Button>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal del visor — separado para poder tener dos dialogs abiertos */}
+      <DialogVisorComprobante
+        abierto={visorAbierto}
+        comprobante={gasto.comprobante}
+        onCerrar={() => setVisorAbierto(false)}
+      />
+    </>
   );
 }

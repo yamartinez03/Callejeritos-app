@@ -57,11 +57,11 @@ let siguienteId = gastosMock.length + 1;
 
 function aplicarFiltroEstado(gastos, filtro) {
   switch (filtro) {
-    case "pendienteAprobar":   return gastos.filter((g) => g.aceptado === null);
+    case "pendienteAprobar":   return gastos.filter((g) => g.aceptado === null  && g.reintegrado === false);
     case "aprobados":          return gastos.filter((g) => g.aceptado === true);
-    case "rechazados":         return gastos.filter((g) => g.aceptado === false);
-    case "reintegrados":       return gastos.filter((g) => g.reintegrado === true);
-    case "pendienteReintegro": return gastos.filter((g) => g.reintegrado === false);
+    case "rechazados":         return gastos.filter((g) => g.aceptado === false && g.reintegrado === false);
+    case "reintegrados":       return gastos.filter((g) => g.aceptado === true  && g.reintegrado === true);
+    case "pendienteReintegro": return gastos.filter((g) => g.aceptado === true  && g.reintegrado === false);
     default:                   return gastos;
   }
 }
