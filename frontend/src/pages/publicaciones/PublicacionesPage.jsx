@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import PublicacionCard from "./components/PublicacionCard";
 import CrearPublicacionForm from "./components/CrearPublicacionForm";
 import logo from "@/assets/callejeritos-logo.png";
+import heroPhoto from "@/assets/photo-hero.jpg";
 
 const PUBLICACIONES_MOCK = [
   {
@@ -190,6 +192,7 @@ const ANIMALES_MOCK = [
 ];
 
 const PublicacionesPage = () => {
+  const navigate = useNavigate();
   const [filter, setFilter] = useState("TODOS");
   const [showCrearForm, setShowCrearForm] = useState(false);
   const [allContent, setAllContent] = useState([
@@ -204,7 +207,7 @@ const PublicacionesPage = () => {
   // Carrusel del hero con autoplay --- verificar con Laura
   const heroSlides = [
     {
-      image: "./src/assets/photo-hero.jpg",
+      image: heroPhoto,
       title: "Asociación Callejeritos Villa Elisa",
       description:
         "Rescatamos, rehabilitamos y buscamos hogares responsables para animales en situación de calle, promoviendo el respeto y bienestar animal hacia una comunidad sin abandono.",
@@ -318,7 +321,9 @@ const PublicacionesPage = () => {
             </h1>
           </div>
         </div>
-        <Button className="font-semibold">Iniciar sesión</Button>
+        <Button className="font-semibold" onClick={() => navigate("/login")}>
+          Iniciar sesión
+        </Button>
       </nav>
 
       {/* Hero Section con Carrusel */}
