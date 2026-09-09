@@ -9,8 +9,8 @@ import Login from "./Login/pages/Login";
 import LoginSuccess from "./Login/pages/Loginsuccess";
 import Registro from "./Login/pages/Registro";
 import Unauthorized from "./pages/Unauthorized";
-import AlertasPage from "@/features/alertas/AlertasPage";
-import VeterinariasPage from "@/features/veterinarias/VeterinariasPage";
+import AlertasPage from "@/Alertas/pages/AlertasPage";
+import VeterinariasPage from "@/Veterinarias/pages/VeterinariasPage";
 
 // No olvidarme de reemplazar  estos placeholders por pantallas reales cuando las chicas las tengan 
 function Dashboard() {
