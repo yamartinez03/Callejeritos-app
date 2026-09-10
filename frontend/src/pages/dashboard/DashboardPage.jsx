@@ -51,12 +51,12 @@ const NAV_ITEMS = [
         subitems: [
           {
             title: "Moderar publicaciones",
-            key: "moderarPubli",
+            key: "moderarPublicacion",
             roles: STAFF_ROLES, // Solo administrador y núcleo operativo
           },
           {
             title: "Ver publicaciones",
-            key: "verPubli",
+            key: "verPublicacion",
             roles: ALL_AUTHENTICATED_ROLES, // Todos los roles autenticados
           },
         ],
@@ -100,7 +100,7 @@ const NAV_ITEMS = [
 // con la clave que definieron en NAV_ITEMS.
 function renderContent(currentPage) {
   switch (currentPage) {
-    case "moderarPubli":
+    case "moderarPublicacion":
       return (
         <div className="p-8">
           <h1 className="text-2xl font-bold text-foreground mb-4">
@@ -112,7 +112,7 @@ function renderContent(currentPage) {
         </div>
       );
 
-    case "verPubli":
+    case "verPublicacion":
       return <PublicacionesPage />;
 
     case "perfil":
@@ -269,10 +269,10 @@ function AppSidebar({ currentPage, onPageSelect, user, onLogout }) {
                                 isActive={currentPage === sub.key}
                                 onClick={() => handleSelectPage(sub.key)}
                               >
-                                {sub.key === "moderarPubli" && (
+                                {sub.key === "moderarPublicacion" && ( //iconos para cada subitem
                                   <FileText className="h-3 w-3" />
                                 )}
-                                {sub.key === "verPubli" && (
+                                {sub.key === "verPublicacion" && (
                                   <Eye className="h-3 w-3" />
                                 )}
                                 <span
@@ -378,13 +378,13 @@ export default function DashboardPage() {
   // 1. Hook para manejar los parámetros de la URL
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // 2. Lee la página de la URL; si está vacía, usa "verPubli"
-  const currentPage = searchParams.get("page") || "verPubli";
+  // 2. Lee la página de la URL; si está vacía, usa "verPublicacion" como valor por defecto
+  const currentPage = searchParams.get("page") || "verPublicacion";
 
-  // 3. Autocompleta la URL a /dashboard?page=verPubli al entrar
+  // 3. Autocompleta la URL a /dashboard?page=verPublicacion al entrar
   useEffect(() => {
     if (!searchParams.get("page")) {
-      setSearchParams({ page: "verPubli" }, { replace: true });
+      setSearchParams({ page: "verPublicacion" }, { replace: true });
     }
   }, [searchParams, setSearchParams]);
 
