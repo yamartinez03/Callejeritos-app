@@ -1,10 +1,7 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import PublicacionCard from "./components/PublicacionCard";
 import CrearPublicacionForm from "./components/CrearPublicacionForm";
-import logo from "@/assets/callejeritos-logo.png";
 
 const PUBLICACIONES_MOCK = [
   {
@@ -192,395 +189,200 @@ const ANIMALES_MOCK = [
 ];
 
 const PublicacionesPage = () => {
-  const navigate = useNavigate();
   const [filter, setFilter] = useState("TODOS");
   const [showCrearForm, setShowCrearForm] = useState(false);
   const [allContent, setAllContent] = useState([
     ...PUBLICACIONES_MOCK,
     ...ANIMALES_MOCK,
   ]);
-  const [currentHeroSlide, setCurrentHeroSlide] = useState(0);
 
   // para el buscador de publicaciones
   const [busqueda, setBusqueda] = useState("");
 
-  // Carrusel del hero con autoplay --- verificar con Laura
-  const heroSlides = [
-    {
-      image: "./src/assets/photo-hero.jpg",
-      title: "Asociación Callejeritos Villa Elisa",
-      description:
-        "Rescatamos, rehabilitamos y buscamos hogares responsables para animales en situación de calle, promoviendo el respeto y bienestar animal hacia una comunidad sin abandono.",
-    },
-    {
-      image:
-        "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=1920&q=80",
-      title: "Juntos por ellos",
-      description:
-        "Cada gesto de amor cuenta. Trabajamos incansablemente para dar una segunda oportunidad a quienes más lo necesitan, construyendo lazos inquebrantables entre humanos y animales.",
-    },
-  ];
-
-  const nextHeroSlide = () => {
-    setCurrentHeroSlide((prev) => (prev + 1) % heroSlides.length);
-  };
-
-  const prevHeroSlide = () => {
-    setCurrentHeroSlide(
-      (prev) => (prev - 1 + heroSlides.length) % heroSlides.length,
-    );
-  };
-
-  // Autoplay del carrusel
-  useEffect(() => {
-    const interval = setInterval(() => {
-      nextHeroSlide();
-    }, 10000);
-    return () => clearInterval(interval);
-  }, []);
-
   const filteredContent = allContent.filter((item) => {
     const esAnimal =
       item.estado === "EN_ADOPCION" || item.estado === "EN_TRANSITO";
-    const estaAprobado = esAnimal || item.estadoaprobado === "APROBADA";
-    const tipoItem = item.tipoPublicacion || item.estado;
-    //filtra por tipo de publicación y estado aprobado
+    const tipo = esAnimal ? item.estado : item.tipoPublicacion;
+
     // Filtro por tipo
-    const pasaFiltro =
-      filter === "TODOS"
-        ? estaAprobado
-        : filter === "EN_ADOPCION"
-          ? (item.estado === "EN_ADOPCION" || item.estado === "EN_TRANSITO") &&
-            estaAprobado
-          : tipoItem === filter && estaAprobado;
+    if (filter !== "TODOS" && tipo !== filter) return false;
 
-    if (busqueda.trim() !== "") {
-      const termino = busqueda.toLowerCase();
-      const textosBuscables = [
-        item.descripcion,
-        item.zona,
-        item.nombreVisitante,
-        item.nombre,
-        item.colorpelaje,
-        item.especie,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-
-      return pasaFiltro && textosBuscables.includes(termino);
+    // Filtro por búsqueda
+    if (busqueda) {
+      const busquedaLower = busqueda.toLowerCase();
+      return (
+        (item.descripcion &&
+          item.descripcion.toLowerCase().includes(busquedaLower)) ||
+        (item.zona && item.zona.toLowerCase().includes(busquedaLower)) ||
+        (item.nombre && item.nombre.toLowerCase().includes(busquedaLower)) ||
+        (item.colorpelaje &&
+          item.colorpelaje.toLowerCase().includes(busquedaLower))
+      );
     }
 
-    return pasaFiltro;
+    return true;
   });
 
-  const handleCrearPublicacion = async (datos) => {
-    const nuevaPublicacion = {
-      idpublicacion: Date.now(),
-      uuid: Math.random().toString(36).substring(7),
-      idpersonapublico: null,
-      idpersonaaprobo: null,
-      idanimal: null,
-      tipoPublicacion: datos.tipoPublicacion,
-      descripcion: datos.descripcion,
-      zona: datos.zona,
-      fecha: datos.fecha,
-      nombreVisitante: datos.nombreVisitante || null,
-      emailVisitante: datos.emailVisitante || null,
-      telefonoVisitante: datos.telefonoVisitante || null,
+  const handleCrearPublicacion = (nuevaPublicacion) => {
+    // Aquí iría la llamada al backend para crear la publicación
+    console.log("Nueva publicación:", nuevaPublicacion);
+
+    // Por ahora, simulamos agregando al estado local
+    const nuevaPublicacionConId = {
+      ...nuevaPublicacion,
+      idpublicacion: allContent.length + 1,
+      uuid: crypto.randomUUID(),
       estadoaprobado: "PENDIENTE",
       resuelto: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      fotos: [],
+      fotos: nuevaPublicacion.fotos || [],
     };
-    setAllContent((prev) => [nuevaPublicacion, ...prev]);
+
+    setAllContent([...allContent, nuevaPublicacionConId]);
     setShowCrearForm(false);
-    alert("Publicación enviada. Quedará pendiente de aprobación.");
   };
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "var(--muted)" }}>
-      {/* Navbar sticky */}
-      <nav
-        className="px-6 py-4 flex items-center justify-between border-b sticky top-0 z-50"
-        style={{ backgroundColor: "var(--secondary)" }}
-      >
-        <div className="flex items-center gap-3">
-          <img
-            src={logo}
-            alt="Callejeritos logo"
-            className="h-10 w-10 object-contain"
-          />
+      {/* Contenido principal */}
+      <main className="px-10 py-8">
+        {/* Header de sección */}
+        <div className="flex justify-between items-center mb-6">
           <div>
-            <h1
-              className="text-lg font-bold"
+            <h3
+              className="text-xl font-bold"
               style={{ color: "var(--foreground)" }}
             >
-              Callejeritos Villa Elisa
-            </h1>
+              Publicaciones nuevas
+            </h3>
+            <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
+              {filteredContent.length}{" "}
+              {filteredContent.length === 1 ? "resultado" : "resultados"}
+            </p>
           </div>
-        </div>
-        <div className="flex gap-2">
-          <ThemeToggle />
-          <Button className="font-semibold" onClick={() => navigate("/login")}>
-            Iniciar sesión
+          <Button
+            className="font-semibold"
+            onClick={() => setShowCrearForm(!showCrearForm)}
+            variant={showCrearForm ? "secondary" : "default"}
+          >
+            {showCrearForm ? "✕ Cancelar" : "+ Nuevo Reporte"}
           </Button>
         </div>
-      </nav>
 
-      {/* Hero Section con Carrusel */}
-      <div className="relative w-full h-96 md:h-[600px] overflow-hidden">
-        <div
-          className="relative w-full h-full bg-cover bg-center bg-no-repeat transition-all duration-500"
-          style={{
-            backgroundImage: `url('${heroSlides[currentHeroSlide].image}')`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/30"></div>
-
-          {/* Controles del carrusel */}
-          <button
-            onClick={prevHeroSlide}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full transition-colors"
-            style={{
-              backgroundColor: "rgba(255, 255, 255, 0.2)",
-              color: "white",
-            }}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.backgroundColor =
-                "rgba(255, 255, 255, 0.4)")
-            }
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.backgroundColor =
-                "rgba(255, 255, 255, 0.2)")
-            }
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
-          </button>
-
-          <button
-            onClick={nextHeroSlide}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full transition-colors"
-            style={{
-              backgroundColor: "rgba(255, 255, 255, 0.2)",
-              color: "white",
-            }}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.backgroundColor =
-                "rgba(255, 255, 255, 0.4)")
-            }
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.backgroundColor =
-                "rgba(255, 255, 255, 0.2)")
-            }
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <polyline points="9 18 15 12 9 6"></polyline>
-            </svg>
-          </button>
-
-          {/* Indicador del carrusel */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex gap-2">
-            {heroSlides.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentHeroSlide(index)}
-                className="w-2 h-2 rounded-full transition-colors"
-                style={{
-                  backgroundColor:
-                    index === currentHeroSlide
-                      ? "white"
-                      : "rgba(255, 255, 255, 0.5)",
-                }}
-              />
-            ))}
-          </div>
-
-          <div className="relative z-10 h-full flex items-center px-8 md:px-16 lg:px-24">
-            <div className="max-w-3xl md:max-w-4xl">
-              <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-4 md:mb-6 leading-tight whitespace-nowrap">
-                {heroSlides[currentHeroSlide].title}
-              </h1>
-              <p className="text-base md:text-xl lg:text-2xl text-white/95 mb-6 md:mb-8 leading-relaxed">
-                {heroSlides[currentHeroSlide].description}
-              </p>
-              <button className="font-semibold px-6 py-3 text-lg border-2 border-white text-white rounded-lg hover:bg-white/10 transition-colors">
-                Donaciones
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div
-        style={{
-          background:
-            "linear-gradient(to bottom, var(--background), var(--muted))",
-        }}
-      >
-        {/* Contenido principal */}
-        <main className="px-10 py-8">
-          {/* Header de sección */}
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h3
-                className="text-xl font-bold"
-                style={{ color: "var(--foreground)" }}
-              >
-                Publicaciones activas
-              </h3>
-              <p
-                className="text-sm"
-                style={{ color: "var(--muted-foreground)" }}
-              >
-                {filteredContent.length}{" "}
-                {filteredContent.length === 1 ? "resultado" : "resultados"}
-              </p>
-            </div>
-            <Button
-              className="font-semibold"
-              onClick={() => setShowCrearForm(!showCrearForm)}
-              variant={showCrearForm ? "secondary" : "default"}
-            >
-              {showCrearForm ? "✕ Cancelar" : "+ Nuevo Reporte"}
-            </Button>
-          </div>
-
+        {/* Filtros */}
+        <div className="flex flex-wrap gap-2 mb-6 items-center">
           {/* Filtros */}
-          <div className="flex flex-wrap gap-2 mb-6 items-center">
-            {/* Filtros */}
-            {[
-              { valor: "TODOS", etiqueta: "Todas" },
-              { valor: "PERDIDO", etiqueta: "Perdidos" },
-              { valor: "ENCONTRADO", etiqueta: "Encontrados" },
-              { valor: "AVISTAMIENTO", etiqueta: "Avistamientos" },
-              { valor: "EN_ADOPCION", etiqueta: "En adopción" },
-            ].map((f) => (
-              <button
-                key={f.valor}
-                onClick={() => setFilter(f.valor)}
-                className="px-4 py-1.5 rounded-full text-sm font-medium border transition-all duration-200"
-                style={{
-                  backgroundColor:
-                    filter === f.valor ? "var(--primary)" : "transparent",
-                  color:
-                    filter === f.valor
-                      ? "var(--primary-foreground)"
-                      : "var(--muted-foreground)",
-                  borderColor:
-                    filter === f.valor ? "var(--primary)" : "var(--border)",
-                }}
-              >
-                {f.etiqueta}
-              </button>
-            ))}
-
-            {/* Buscador — en desktop a la derecha, en mobile nueva fila alineado a la derecha */}
-            <div
-              className="ml-auto flex items-center gap-2 border rounded-full px-4 py-1.5 w-full md:w-auto"
+          {[
+            { valor: "TODOS", etiqueta: "Todas" },
+            { valor: "PERDIDO", etiqueta: "Perdidos" },
+            { valor: "ENCONTRADO", etiqueta: "Encontrados" },
+            { valor: "AVISTAMIENTO", etiqueta: "Avistamientos" },
+            { valor: "EN_ADOPCION", etiqueta: "En adopción" },
+          ].map((f) => (
+            <button
+              key={f.valor}
+              onClick={() => setFilter(f.valor)}
+              className="px-4 py-1.5 rounded-full text-sm font-medium border transition-all duration-200"
               style={{
-                borderColor: "var(--border)",
-                backgroundColor: "var(--card)",
+                backgroundColor:
+                  filter === f.valor ? "var(--primary)" : "transparent",
+                color:
+                  filter === f.valor
+                    ? "var(--primary-foreground)"
+                    : "var(--muted-foreground)",
+                borderColor:
+                  filter === f.valor ? "var(--primary)" : "var(--border)",
               }}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 shrink-0"
-                style={{ color: "var(--muted-foreground)" }}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"
-                />
-              </svg>
-              <input
-                type="text"
-                placeholder="Buscar por color, nombre, zona..."
-                value={busqueda}
-                onChange={(e) => setBusqueda(e.target.value)}
-                className="text-sm bg-transparent outline-none w-full md:w-48"
-                style={{ color: "var(--foreground)" }}
+              {f.etiqueta}
+            </button>
+          ))}
+
+          {/* Buscador — en desktop a la derecha, en mobile nueva fila alineado a la derecha */}
+          <div
+            className="ml-auto flex items-center gap-2 border rounded-full px-4 py-1.5 w-full md:w-auto"
+            style={{
+              borderColor: "var(--border)",
+              backgroundColor: "var(--card)",
+            }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4 shrink-0"
+              style={{ color: "var(--muted-foreground)" }}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"
               />
-              {busqueda && (
-                <button
-                  onClick={() => setBusqueda("")}
-                  className="text-xs shrink-0"
+            </svg>
+            <input
+              type="text"
+              placeholder="Buscar por color, nombre, zona..."
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              className="text-sm bg-transparent outline-none w-full md:w-48"
+              style={{ color: "var(--foreground)" }}
+            />
+            {busqueda && (
+              <button
+                onClick={() => setBusqueda("")}
+                className="text-xs shrink-0"
+                style={{ color: "var(--muted-foreground)" }}
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Layout split o full */}
+        <div
+          className={`flex gap-6 items-start ${showCrearForm ? "flex-col md:flex-row" : ""}`}
+        >
+          {/* Form — en mobile aparece primero, en desktop a la derecha */}
+          {showCrearForm && (
+            <div className="w-full md:w-1/4 md:order-2 md:sticky md:top-6">
+              <CrearPublicacionForm
+                onSubmit={handleCrearPublicacion}
+                onCancel={() => setShowCrearForm(false)}
+              />
+            </div>
+          )}
+
+          {/* Publicaciones — en mobile aparece después del form, en desktop a la izquierda */}
+          <div
+            className={`${showCrearForm ? "w-full md:w-3/4 md:order-1" : "w-full"}`}
+          >
+            {filteredContent.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredContent.map((item) => (
+                  <PublicacionCard
+                    key={item.uuid || `animal-${item.idanimal}`}
+                    item={item}
+                    publicacion={item}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-16">
+                <p
+                  className="text-lg"
                   style={{ color: "var(--muted-foreground)" }}
                 >
-                  ✕
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Layout split o full */}
-          <div
-            className={`flex gap-6 items-start ${showCrearForm ? "flex-col md:flex-row" : ""}`}
-          >
-            {/* Form — en mobile aparece primero, en desktop a la derecha */}
-            {showCrearForm && (
-              <div className="w-full md:w-1/4 md:order-2 md:sticky md:top-6">
-                <CrearPublicacionForm
-                  onSubmit={handleCrearPublicacion}
-                  onCancel={() => setShowCrearForm(false)}
-                />
+                  No hay publicaciones para mostrar.
+                </p>
               </div>
             )}
-
-            {/* Publicaciones — en mobile aparece después del form, en desktop a la izquierda */}
-            <div
-              className={`${showCrearForm ? "w-full md:w-3/4 md:order-1" : "w-full"}`}
-            >
-              {filteredContent.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredContent.map((item) => (
-                    <PublicacionCard
-                      key={item.uuid || `animal-${item.idanimal}`}
-                      item={item}
-                      publicacion={item}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-16">
-                  <p
-                    className="text-lg"
-                    style={{ color: "var(--muted-foreground)" }}
-                  >
-                    No hay publicaciones para mostrar.
-                  </p>
-                </div>
-              )}
-            </div>
           </div>
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   );
 };
