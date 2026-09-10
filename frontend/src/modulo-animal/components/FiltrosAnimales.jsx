@@ -9,7 +9,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ESPECIES, VETERINARIAS, RESPONSABLES_HOGAR, ESTADOS_ANIMAL } from "@/shared/data/mockAnimales";
+import {
+  ESPECIES,
+  VETERINARIAS,
+  RESPONSABLES_HOGAR,
+  ESTADOS_ANIMAL,
+} from "@/shared/data/mockAnimales";
 
 /**
  * Panel de filtros avanzados. Es "controlado": recibe el estado actual y
@@ -18,7 +23,7 @@ import { ESPECIES, VETERINARIAS, RESPONSABLES_HOGAR, ESTADOS_ANIMAL } from "@/sh
  */
 export default function FiltrosAnimales({ filtros, onChange, onReset }) {
   const set = (campo) => (valor) => onChange({ ...filtros, [campo]: valor });
- 
+
   return (
     <div className="rounded-xl border border-border bg-card p-4 sm:p-5">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -27,7 +32,13 @@ export default function FiltrosAnimales({ filtros, onChange, onReset }) {
           <Label>Especie / raza</Label>
           <Select value={filtros.especie} onValueChange={set("especie")}>
             <SelectTrigger className="w-full">
-              <SelectValue />
+              <SelectValue placeholder="Selecciona una especia/raza">
+                {filtros.especie === "TODAS"
+                  ? "Todas"
+                  : ESPECIES.find(
+                      (e) => String(e.idespecie) === filtros.especie,
+                    )?.nombre}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="TODAS">Todas</SelectItem>
@@ -39,13 +50,19 @@ export default function FiltrosAnimales({ filtros, onChange, onReset }) {
             </SelectContent>
           </Select>
         </div>
- 
+
         {/* Sexo */}
         <div className="space-y-1.5">
           <Label>Sexo</Label>
           <Select value={filtros.sexo} onValueChange={set("sexo")}>
             <SelectTrigger className="w-full">
-              <SelectValue />
+              <SelectValue placeholder="Selecciona un sexo">
+                {filtros.sexo === "TODOS"
+                  ? "Todos"
+                  : filtros.sexo === "MACHO"
+                    ? "Macho"
+                    : "Hembra"}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="TODOS">Todos</SelectItem>
@@ -54,13 +71,18 @@ export default function FiltrosAnimales({ filtros, onChange, onReset }) {
             </SelectContent>
           </Select>
         </div>
- 
+
         {/* Estado */}
         <div className="space-y-1.5">
           <Label>Estado</Label>
           <Select value={filtros.estado} onValueChange={set("estado")}>
             <SelectTrigger className="w-full">
-              <SelectValue />
+              <SelectValue placeholder="Selecciona un estado">
+                {filtros.estado === "TODOS"
+                  ? "Todos"
+                  : ESTADOS_ANIMAL.find((e) => e.value === filtros.estado)
+                      ?.label}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="TODOS">Todos</SelectItem>
@@ -72,7 +94,7 @@ export default function FiltrosAnimales({ filtros, onChange, onReset }) {
             </SelectContent>
           </Select>
         </div>
- 
+
         {/* Edad (rango) */}
         <div className="space-y-1.5">
           <Label>Edad (años)</Label>
@@ -96,7 +118,7 @@ export default function FiltrosAnimales({ filtros, onChange, onReset }) {
             />
           </div>
         </div>
- 
+
         {/* Color de pelaje */}
         <div className="space-y-1.5">
           <Label>Color de pelaje</Label>
@@ -106,43 +128,65 @@ export default function FiltrosAnimales({ filtros, onChange, onReset }) {
             onChange={(e) => set("color")(e.target.value)}
           />
         </div>
- 
+
         {/* Veterinaria */}
         <div className="space-y-1.5">
           <Label>Veterinaria</Label>
-          <Select value={filtros.veterinaria} onValueChange={set("veterinaria")}>
+          <Select
+            value={filtros.veterinaria}
+            onValueChange={set("veterinaria")}
+          >
             <SelectTrigger className="w-full">
-              <SelectValue />
+              <SelectValue placeholder="Selecciona una veterinaria">
+                {filtros.veterinaria === "TODAS"
+                  ? "Todas"
+                  : VETERINARIAS.find(
+                      (v) => String(v.idresponsable) === filtros.veterinaria,
+                    )?.nombre}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="TODAS">Todas</SelectItem>
               {VETERINARIAS.map((v) => (
-                <SelectItem key={v.idresponsable} value={String(v.idresponsable)}>
+                <SelectItem
+                  key={v.idresponsable}
+                  value={String(v.idresponsable)}
+                >
                   {v.nombre}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
- 
+
         {/* Transitante / adoptante */}
         <div className="space-y-1.5">
           <Label>Transitante / adoptante</Label>
-          <Select value={filtros.responsable} onValueChange={set("responsable")}>
+          <Select
+            value={filtros.responsable}
+            onValueChange={set("responsable")}
+          >
             <SelectTrigger className="w-full">
-              <SelectValue />
+              <SelectValue placeholder="Selecciona un transitante/adoptante">
+                {filtros.responsable === "TODOS"
+                  ? "Todos"
+                  : RESPONSABLES_HOGAR.find(
+                      (r) => String(r.idpersona) === filtros.responsable,
+                    )?.nombre}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="TODOS">Todos</SelectItem>
               {RESPONSABLES_HOGAR.map((r) => (
                 <SelectItem key={r.idpersona} value={String(r.idpersona)}>
-                  {r.nombre} ({r.tipo === "TRANSITANTE" ? "Transitante" : "Adoptante"})
+                  {r.nombre} (
+                  {r.tipo === "TRANSITANTE" ? "Transitante" : "Adoptante"})
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
- 
+
         {/* Lugar de rescate */}
         <div className="space-y-1.5">
           <Label>Lugar de rescate</Label>
@@ -153,9 +197,14 @@ export default function FiltrosAnimales({ filtros, onChange, onReset }) {
           />
         </div>
       </div>
- 
+
       <div className="mt-4 flex justify-end border-t border-border pt-3">
-        <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground" onClick={onReset}>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="gap-1.5 text-muted-foreground"
+          onClick={onReset}
+        >
           <RotateCcw className="h-3.5 w-3.5" />
           Limpiar filtros
         </Button>
@@ -163,4 +212,3 @@ export default function FiltrosAnimales({ filtros, onChange, onReset }) {
     </div>
   );
 }
- 
