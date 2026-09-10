@@ -9,7 +9,6 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -26,72 +25,66 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronRight, Eye, FileText, LogOut } from "lucide-react";
+import { ChevronRight, Eye, FileText, LogOut, BookCheck } from "lucide-react";
 import logo from "@/assets/callejeritos-logo.png";
 // Avatar de ejemplo mientras no tenemos el backend
 import avatarEjemplo from "@/assets/ejemploUser.jpg";
 import PublicacionesPage from "../publicaciones/PublicacionesPage";
 
 // ─── Navegación del sidebar ───────────────────────────────────────────────────
-// Cada módulo nuevo que agreguen va acá como un objeto en el array `items`
-// dentro de su grupo correspondiente.
-
+// Cada módulo nuevo que agreguen va acá como un objeto en el array `NAV_ITEMS`.
 // Estructura de un ítem con submenú:
-// { title: "Nombre", icon: IconoLucide, items: [{ title: "Sub", key: "clave", roles: [] }] }
+// { title: "Nombre", icon: IconoLucide, subitems: [{ title: "Sub", key: "clave",icon: IconoLucide,  roles: [] }] }
 // Estructura de un ítem sin submenú:
 // { title: "Nombre", icon: IconoLucide, key: "clave", roles: [] }
+// Si no se especifica `roles`, el ítem es visible para todos los roles autenticados
 const NAV_ITEMS = [
   {
-    group: "Publicaciones",
+    title: "Publicaciones",
+    icon: FileText, // ícono acá
     roles: ALL_AUTHENTICATED_ROLES,
-    items: [
+    subitems: [
       {
-        title: "Publicaciones",
-        icon: FileText,
-        subitems: [
-          {
-            title: "Moderar publicaciones",
-            key: "moderarPublicacion",
-            roles: STAFF_ROLES, // Solo administrador y núcleo operativo
-          },
-          {
-            title: "Ver publicaciones",
-            key: "verPublicacion",
-            roles: ALL_AUTHENTICATED_ROLES, // Todos los roles autenticados
-          },
-        ],
+        title: "Moderar publicaciones",
+        key: "moderarPublicacion",
+        icon: BookCheck,
+        roles: STAFF_ROLES,
+      },
+      {
+        title: "Ver publicaciones",
+        key: "verPublicacion",
+        icon: Eye, // <--- Igual acá
+        roles: ALL_AUTHENTICATED_ROLES,
       },
     ],
   },
   /* ── AGREGAR NUEVOS GRUPOS ACÁ ──────────────────────────────────────────────
   Ejemplo:
   {
-     group: "Animales",
+     title: "Animales",
+     icon: IconoLucide,
      roles: STAFF_ROLES, // Solo staff
-     items: [
-       { title: "Gestión de animales", icon: IconoLucide, key: "animales" },
+     subitems: [
+       { title: "Gestión de animales", icon: IconoLucide, key: "animales", roles: STAFF_ROLES },
      ],
   },
   {
-     group: "Tránsito",
+     title: "Tránsito",
+     icon: IconoLucide,
+     key: "transito",
      roles: ALL_AUTHENTICATED_ROLES,
-     items: [
-       { title: "Hogares de tránsito", icon: IconoLucide, key: "transito" },
-     ],
   },
   {
-     group: "Adopciones",
+     title: "Adopciones",
+     icon: IconoLucide,
+     key: "adopciones",
      roles: ALL_AUTHENTICATED_ROLES,
-     items: [
-       { title: "Solicitudes de adopción", icon: IconoLucide, key: "adopciones" },
-     ],
   },
   {
-     group: "Inventario",
+     title: "Inventario",
+     icon: IconoLucide,
+     key: "inventario",
      roles: STAFF_ROLES, // Solo staff
-     items: [
-       { title: "Inventario", icon: IconoLucide, key: "inventario" },
-     ],
   }, */
 ];
 
@@ -160,28 +153,19 @@ function AppSidebar({ currentPage, onPageSelect, user, onLogout }) {
   };
 
   // Filtrar navegación según el rol del usuario
-  const filterNavByRole = (items) => {
-    return items
-      .filter((item) => !item.roles || item.roles.includes(userRole))
-      .map((item) => {
-        if (item.subitems) {
-          return {
-            ...item,
-            subitems: item.subitems.filter(
-              (sub) => !sub.roles || sub.roles.includes(userRole),
-            ),
-          };
-        }
-        return item;
-      });
-  };
-
   const filteredNavItems = NAV_ITEMS.filter(
-    (group) => !group.roles || group.roles.includes(userRole),
-  ).map((group) => ({
-    ...group,
-    items: filterNavByRole(group.items),
-  }));
+    (item) => !item.roles || item.roles.includes(userRole),
+  ).map((item) => {
+    if (item.subitems) {
+      return {
+        ...item,
+        subitems: item.subitems.filter(
+          (sub) => !sub.roles || sub.roles.includes(userRole),
+        ),
+      };
+    }
+    return item;
+  });
 
   const initials = user?.name
     ? user.name
@@ -232,49 +216,43 @@ function AppSidebar({ currentPage, onPageSelect, user, onLogout }) {
 
       {/* Navegación */}
       <SidebarContent>
-        {filteredNavItems.map((group) => (
-          <SidebarGroup key={group.group}>
-            <SidebarGroupLabel
-              style={{ color: "var(--sidebar-accent-foreground)" }}
-            >
-              {group.group}
-            </SidebarGroupLabel>
-            <SidebarMenu>
-              {group.items.map((item) =>
-                item.subitems ? (
-                  // Ítem con submenú colapsable
-                  <Collapsible
-                    key={item.title}
-                    defaultOpen
-                    className="group/collapsible"
-                  >
-                    <SidebarMenuItem>
-                      <CollapsibleTrigger asChild>
-                        <SidebarMenuButton tooltip={item.title}>
-                          {item.icon && <item.icon />}
-                          <span style={{ color: "var(--sidebar-foreground)" }}>
-                            {item.title}
-                          </span>
-                          <ChevronRight
-                            className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90"
-                            style={{ color: "var(--sidebar-foreground)" }}
-                          />
-                        </SidebarMenuButton>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <SidebarMenuSub>
-                          {item.subitems.map((sub) => (
+        <SidebarGroup>
+          <SidebarMenu>
+            {filteredNavItems.map((item) => {
+              const ItemIcon = item.icon; // Componente de icono para item principal
+              return item.subitems ? (
+                // Ítem con submenú colapsable
+                <Collapsible
+                  key={item.title}
+                  defaultOpen
+                  className="group/collapsible"
+                >
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton tooltip={item.title}>
+                        {ItemIcon && <ItemIcon />}
+                        <span style={{ color: "var(--sidebar-foreground)" }}>
+                          {item.title}
+                        </span>
+                        <ChevronRight
+                          className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90"
+                          style={{ color: "var(--sidebar-foreground)" }}
+                        />
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        {item.subitems.map((sub) => {
+                          const SubIcon = sub.icon; // Asignación a variable en mayúscula para React
+                          return (
                             <SidebarMenuSubItem key={sub.key}>
                               <SidebarMenuSubButton
                                 isActive={currentPage === sub.key}
                                 onClick={() => handleSelectPage(sub.key)}
                               >
-                                {sub.key === "moderarPublicacion" && ( //iconos para cada subitem
-                                  <FileText className="h-3 w-3" />
-                                )}
-                                {sub.key === "verPublicacion" && (
-                                  <Eye className="h-3 w-3" />
-                                )}
+                                {/* Se renderiza dinámicamente si el subítem tiene ícono asignado */}
+                                {SubIcon && <SubIcon className="h-3 w-3" />}
+
                                 <span
                                   style={{ color: "var(--sidebar-foreground)" }}
                                 >
@@ -282,30 +260,30 @@ function AppSidebar({ currentPage, onPageSelect, user, onLogout }) {
                                 </span>
                               </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
-                          ))}
-                        </SidebarMenuSub>
-                      </CollapsibleContent>
-                    </SidebarMenuItem>
-                  </Collapsible>
-                ) : (
-                  // Ítem sin submenú
-                  <SidebarMenuItem key={item.key}>
-                    <SidebarMenuButton
-                      isActive={currentPage === item.key}
-                      onClick={() => handleSelectPage(item.key)}
-                      tooltip={item.title}
-                    >
-                      {item.icon && <item.icon />}
-                      <span style={{ color: "var(--sidebar-foreground)" }}>
-                        {item.title}
-                      </span>
-                    </SidebarMenuButton>
+                          );
+                        })}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
                   </SidebarMenuItem>
-                ),
-              )}
-            </SidebarMenu>
-          </SidebarGroup>
-        ))}
+                </Collapsible>
+              ) : (
+                // Ítem sin submenú
+                <SidebarMenuItem key={item.key}>
+                  <SidebarMenuButton
+                    isActive={currentPage === item.key}
+                    onClick={() => handleSelectPage(item.key)}
+                    tooltip={item.title}
+                  >
+                    {ItemIcon && <ItemIcon />}
+                    <span style={{ color: "var(--sidebar-foreground)" }}>
+                      {item.title}
+                    </span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            })}
+          </SidebarMenu>
+        </SidebarGroup>
       </SidebarContent>
 
       {/* Footer con usuario y logout estilizado */}
