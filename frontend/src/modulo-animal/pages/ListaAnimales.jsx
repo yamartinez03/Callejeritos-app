@@ -154,13 +154,12 @@ export default function ListaAnimales() {
               ))}
             </div>
           </div>
-
-          <Button asChild className="w-full gap-1.5 lg:w-auto">
-            <Link to="/animales/nuevo">
+          <Link to="/animales/nuevo">
+            <Button asChild className="w-full gap-1.5 lg:w-auto">
               <Plus className="h-4 w-4" />
               Nuevo animal
-            </Link>
-          </Button>
+            </Button>
+          </Link>
         </div>
 
         {/* Toggle de filtros avanzados */}
