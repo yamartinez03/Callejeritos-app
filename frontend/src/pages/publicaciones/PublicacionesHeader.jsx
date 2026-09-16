@@ -23,6 +23,20 @@ const PublicacionesHeader = () => {
       description:
         "Cada gesto de amor cuenta. Trabajamos incansablemente para dar una segunda oportunidad a quienes más lo necesitan, construyendo lazos inquebrantables entre humanos y animales.",
     },
+    {
+      image: "./src/assets/photo-hero3.avif",
+      title: "¿Querés adoptar?",
+      description:
+        "Encontrá a tu compañero ideal entre nuestros animales disponibles. Para iniciar el proceso de adopción necesitás crear una cuenta o iniciar sesión. Una vez dentro, podrás postularte, completar el formulario y seguir el estado de tu solicitud.",
+      cta: {
+        label: "Crear cuenta",
+        action: "registro",
+      },
+      ctaSecundario: {
+        label: "Ya tengo cuenta",
+        action: "login",
+      },
+    },
   ];
 
   const nextHeroSlide = () => {
@@ -174,9 +188,36 @@ const PublicacionesHeader = () => {
               <p className="text-sm sm:text-lg md:text-xl lg:text-2xl text-white/95 mb-5 sm:mb-8 leading-relaxed line-clamp-4 sm:line-clamp-none">
                 {heroSlides[currentHeroSlide].description}
               </p>
-              <button className="font-semibold px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-lg border-2 border-white text-white rounded-lg hover:bg-white/10 transition-colors">
-                Donaciones
-              </button>
+              <div className="flex gap-3 flex-wrap">
+                {/* Botón principal — solo en el slide de adopción */}
+                {heroSlides[currentHeroSlide].cta ? (
+                  <>
+                    <button
+                      onClick={() =>
+                        navigate(`/${heroSlides[currentHeroSlide].cta.action}`)
+                      }
+                      className="font-semibold px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-lg bg-white text-gray-900 rounded-lg hover:bg-white/90 transition-colors"
+                    >
+                      {heroSlides[currentHeroSlide].cta.label}
+                    </button>
+                    <button
+                      onClick={() =>
+                        navigate(
+                          `/${heroSlides[currentHeroSlide].ctaSecundario.action}`,
+                        )
+                      }
+                      className="font-semibold px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-lg border-2 border-white text-white rounded-lg hover:bg-white/10 transition-colors"
+                    >
+                      {heroSlides[currentHeroSlide].ctaSecundario.label}
+                    </button>
+                  </>
+                ) : (
+                  // Botón genérico para los otros slides
+                  <button className="font-semibold px-4 py-2 sm:px-6 sm:py-3 text-sm sm:text-lg border-2 border-white text-white rounded-lg hover:bg-white/10 transition-colors">
+                    Donaciones
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
