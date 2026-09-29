@@ -175,6 +175,18 @@ model Archivo {
   @@map("archivo")
 }
 
+model ConfiguracionFormulario {
+  idconfig      Int     @id @default(autoincrement())
+  tipo          String  @db.VarChar(50) // "ADOPCION" o "TRANSITO"
+  rutaformulario String  @db.VarChar(255)
+  activo        Boolean @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+ 
+  @@unique([tipo]) //No puede haber 2 rutas para adopción
+  @@map("configuracionformulario")
+}
+
 model DireccionPersona {
   iddirper    Int       @id @default(autoincrement())
   idpersona   Int
@@ -274,7 +286,6 @@ model Hogar {
   createdAt             DateTime              @default(now())
   updatedAt             DateTime              @updatedAt
   postulaciontransito   PostulacionTransito[]
-  solicitudadopcion     SolicitudAdopcion[]
 
   @@map("hogar")
 }
@@ -621,17 +632,14 @@ model ServicioOfrecido {
 
 model SolicitudAdopcion {
   idsolicituda    Int                     @id @default(autoincrement())
-  idhogar         Int
   idsolicitante   Int
   idpersonaaprobo Int?
   idanimal        Int
   estado          EstadoSolicitud	  @default(PENDIENTE)
-  rutaformulario  String                  @db.VarChar(255)
   fechaaprobacion DateTime?               @db.Date
   createdAt       DateTime                @default(now())
   updatedAt       DateTime                @updatedAt
   animal          Animal                  @relation(fields: [idanimal], references: [idanimal], onDelete: Restrict, onUpdate: Cascade)
-  hogar           Hogar                   @relation(fields: [idhogar], references: [idhogar], onDelete: Restrict, onUpdate: Cascade)
   aprobadoPor     Usuario?                @relation("solicitudadopcion_idpersonaaproboTousuario", fields: [idpersonaaprobo], references: [idpersona], onDelete: SetNull, onUpdate: Cascade)
   solicitante     Usuario                 @relation("solicitudadopcion_idsolicitanteTousuario", fields: [idsolicitante], references: [idpersona], onDelete: Restrict, onUpdate: Cascade)
 
