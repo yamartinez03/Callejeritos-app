@@ -105,6 +105,7 @@ function AppRoutes() {
       />
       <Route path="/no-autorizado" element={<Unauthorized />} />
 
+<<<<<<< HEAD
       {/* Rutas protegidas - Dashboard con subrutas anidadas */}
       <Route
         path="/dashboard/*"
@@ -119,6 +120,15 @@ function AppRoutes() {
       <Route path="/adopciones" element={<VerAdopcionesPage />} />
     </Routes>
   );
+=======
+      </main>
+    <Routes>
+      <Route path="/gastos" element={< GastosPage/>}/>
+    </Routes>
+    </div>
+    
+  )
+>>>>>>> b702eca39209991e7df44bccb7456b865bcb7151
 }
 
 export default function App() {
