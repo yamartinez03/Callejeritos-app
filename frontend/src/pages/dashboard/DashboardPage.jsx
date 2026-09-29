@@ -25,11 +25,25 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronRight, Eye, FileText, LogOut, BookCheck } from "lucide-react";
+import {
+  ChevronRight,
+  Eye,
+  FileText,
+  LogOut,
+  BookCheck,
+  PawPrint,
+  Bone,
+  Settings,
+} from "lucide-react";
 import logo from "@/assets/callejeritos-logo.png";
 // Avatar de ejemplo mientras no tenemos el backend
 import avatarEjemplo from "@/assets/ejemploUser.jpg";
 import PublicacionesPage from "../publicaciones/PublicacionesPage";
+import ModerarAdopcionesPage from "../adopciones/ModerarAdopcionesPage";
+import VerAdopcionesPage from "../adopciones/VerAdopcionesPage";
+import ConsultarAdopcionesPage from "../adopciones/ConsultarAdopcionesPage";
+import FormularioAdopcionPage from "../adopciones/components/FormularioAdopcionPage";
+import ConfiguracionFormulariosPage from "../configuracionForm/ConfiguracionFormulariosPage";
 
 // ─── Navegación del sidebar ───────────────────────────────────────────────────
 // Cada módulo nuevo que agreguen va acá como un objeto en el array `NAV_ITEMS`.
@@ -58,6 +72,37 @@ const NAV_ITEMS = [
       },
     ],
   },
+  {
+    title: "Adopciones",
+    icon: PawPrint,
+    roles: ALL_AUTHENTICATED_ROLES,
+    subitems: [
+      {
+        title: "Moderar Adopciones",
+        key: "moderarAdopciones",
+        icon: BookCheck,
+        roles: STAFF_ROLES,
+      },
+      {
+        title: "Ver Animales en Adopción",
+        key: "verAdopciones",
+        icon: Eye,
+        roles: ALL_AUTHENTICATED_ROLES,
+      },
+      {
+        title: "Tus Adopciones",
+        key: "consultarAdopciones",
+        icon: Bone,
+        roles: ALL_AUTHENTICATED_ROLES,
+      },
+    ],
+  },
+  {
+    title: "Configuración de Formularios",
+    icon: Settings,
+    key: "configurarFormularios",
+    roles: STAFF_ROLES,
+  },
   /* ── AGREGAR NUEVOS GRUPOS ACÁ ──────────────────────────────────────────────
   Ejemplo:
   {
@@ -75,12 +120,6 @@ const NAV_ITEMS = [
      roles: ALL_AUTHENTICATED_ROLES,
   },
   {
-     title: "Adopciones",
-     icon: IconoLucide,
-     key: "adopciones",
-     roles: ALL_AUTHENTICATED_ROLES,
-  },
-  {
      title: "Inventario",
      icon: IconoLucide,
      key: "inventario",
@@ -91,7 +130,7 @@ const NAV_ITEMS = [
 // ─── Contenido por página ─────────────────────────────────────────────────────
 // Cuando agreguen una página nueva, importenla arriba y agreguen su case acá
 // con la clave que definieron en NAV_ITEMS.
-function renderContent(currentPage) {
+function renderContent(currentPage, currentPageParams) {
   switch (currentPage) {
     case "moderarPublicacion":
       return (
@@ -117,9 +156,27 @@ function renderContent(currentPage) {
           </p>
         </div>
       );
+    case "moderarAdopciones":
+      return <ModerarAdopcionesPage />;
+
+    case "verAdopciones":
+      return (
+        <VerAdopcionesPage
+          onNavegar={(key, params) => window.onNavegarDashboard?.(key, params)}
+        />
+      );
+
+    case "consultarAdopciones":
+      return <ConsultarAdopcionesPage />;
+
+    case "solicitarAdopcion":
+      return <FormularioAdopcionPage animalId={currentPageParams?.animalId} />;
+
+    case "configurarFormularios":
+      return <ConfiguracionFormulariosPage />;
+
     // ── AGREGAR NUEVOS CASES ACÁ ───────────────────────────────────────────
-    // case "animales":
-    //   return <AnimalesPage />;
+
     // case "transito":
     //   return <TransitoPage />;
     // case "adopciones":
@@ -147,8 +204,8 @@ function AppSidebar({ currentPage, onPageSelect, user, onLogout }) {
   const userRole = user?.role;
 
   // Selecciona la página y cierra el drawer en mobile
-  const handleSelectPage = (key) => {
-    onPageSelect(key);
+  const handleSelectPage = (key, params = {}) => {
+    onPageSelect(key, params);
     setOpenMobile(false);
   };
 
@@ -358,6 +415,7 @@ export default function DashboardPage() {
 
   // 2. Lee la página de la URL; si está vacía, usa "verPublicacion" como valor por defecto
   const currentPage = searchParams.get("page") || "verPublicacion";
+  const currentPageParams = JSON.parse(searchParams.get("params") || "{}");
 
   // 3. Autocompleta la URL a /dashboard?page=verPublicacion al entrar
   useEffect(() => {
@@ -366,10 +424,18 @@ export default function DashboardPage() {
     }
   }, [searchParams, setSearchParams]);
 
-  // 4. Actualiza la URL e incrementa el historial del navegador
-  const handlePageSelect = (pageKey) => {
-    setSearchParams({ page: pageKey });
+  // 4. Maneja la navegación entre páginas
+  const handlePageSelect = (key, params = {}) => {
+    setSearchParams({ page: key, params: JSON.stringify(params) });
   };
+
+  // 5. Exponer función de navegación global para componentes internos
+  useEffect(() => {
+    window.onNavegarDashboard = handlePageSelect;
+    return () => {
+      delete window.onNavegarDashboard;
+    };
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -393,7 +459,9 @@ export default function DashboardPage() {
             <SidebarTrigger />
           </header>
 
-          <main className="flex-1">{renderContent(currentPage)}</main>
+          <main className="flex-1">
+            {renderContent(currentPage, currentPageParams)}
+          </main>
         </div>
       </div>
     </SidebarProvider>

@@ -205,7 +205,14 @@ const PublicacionesPage = () => {
     const tipo = esAnimal ? item.estado : item.tipoPublicacion;
 
     // Filtro por tipo
-    if (filter !== "TODOS" && tipo !== filter) return false;
+    if (filter !== "TODOS") {
+      if (filter === "EN_ADOPCION") {
+        // Incluir tanto EN_ADOPCION como EN_TRANSITO
+        if (!esAnimal) return false;
+      } else if (tipo !== filter) {
+        return false;
+      }
+    }
 
     // Filtro por búsqueda
     if (busqueda) {

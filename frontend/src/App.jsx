@@ -9,6 +9,7 @@ import Registro from "./Login/pages/Registro";
 import Unauthorized from "./pages/Unauthorized";
 import PublicacionesHeader from "./pages/publicaciones/PublicacionesHeader";
 import DashboardPage from "./pages/dashboard/DashboardPage";
+import VerAdopcionesPage from "./pages/adopciones/VerAdopcionesPage";
 
 function AppRoutes() {
   const { login } = useAuth();
@@ -113,6 +114,9 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+
+      {/* Rutas de adopciones */}
+      <Route path="/adopciones" element={<VerAdopcionesPage />} />
     </Routes>
   );
 }
