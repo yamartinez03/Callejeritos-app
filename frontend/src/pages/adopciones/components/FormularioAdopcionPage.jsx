@@ -59,7 +59,9 @@ const FormularioAdopcionPage = ({ animalId }) => {
   // Si se pasa un animalId, buscarlo y mostrar directamente el formulario
   useEffect(() => {
     if (animalId) {
-      const animal = ANIMALES_MOCK.find(a => a.idanimal === parseInt(animalId));
+      const animal = ANIMALES_MOCK.find(
+        (a) => a.idanimal === parseInt(animalId),
+      );
       if (animal) {
         setAnimalSeleccionado(animal);
         setMostrarFormulario(true);
@@ -97,7 +99,8 @@ const FormularioAdopcionPage = ({ animalId }) => {
     navigate("/dashboard");
   };
 
-  const googleFormUrl = "https://docs.google.com/forms/d/e/1FAIpQLSduzFJZg4xXXQN0_bRjH_LyElLOciNgVSY3Gla34kJwU_IZeQ/viewform?usp=publish-editor";
+  const googleFormUrl =
+    "https://docs.google.com/forms/d/e/1FAIpQLSduzFJZg4xXXQN0_bRjH_LyElLOciNgVSY3Gla34kJwU_IZeQ/viewform?usp=publish-editor"; //mock luego debe venir de la configuración del backend
 
   if (!mostrarFormulario) {
     // Vista de selección de animal
@@ -112,10 +115,7 @@ const FormularioAdopcionPage = ({ animalId }) => {
             >
               Solicitar Adopción
             </h1>
-            <p
-              className="text-sm"
-              style={{ color: "var(--muted-foreground)" }}
-            >
+            <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
               Selecciona el animal que deseas adoptar
             </p>
           </div>
@@ -191,7 +191,8 @@ const FormularioAdopcionPage = ({ animalId }) => {
                         className="text-sm"
                         style={{ color: "var(--muted-foreground)" }}
                       >
-                        {animal.especie} · {animal.colorpelaje} · {animal.edadestimada} años
+                        {animal.especie} · {animal.colorpelaje} ·{" "}
+                        {animal.edadestimada} años
                       </p>
                     </div>
                   </CardContent>
@@ -227,10 +228,7 @@ const FormularioAdopcionPage = ({ animalId }) => {
           >
             Formulario de Adopción
           </h1>
-          <p
-            className="text-sm"
-            style={{ color: "var(--muted-foreground)" }}
-          >
+          <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
             Animal: {animalSeleccionado?.nombre}
           </p>
         </div>
@@ -239,24 +237,23 @@ const FormularioAdopcionPage = ({ animalId }) => {
         <div className="mb-20">
           <iframe
             src={googleFormUrl}
-            style={{ width: '100%', height: '600px', border: 'none' }}
+            style={{ width: "100%", height: "600px", border: "none" }}
             title="Formulario de Adopción"
           />
         </div>
 
         {/* Botones sticky footer */}
-        <div className="fixed bottom-0 left-0 right-0 p-6 border-t flex items-center justify-end gap-4 pr-10" style={{ backgroundColor: "var(--background)", borderColor: "var(--border)" }}>
-          <Button
-            variant="outline"
-            onClick={handleVolver}
-            className="w-48"
-          >
+        <div
+          className="fixed bottom-0 left-0 right-0 p-6 border-t flex items-center justify-end gap-4 pr-10"
+          style={{
+            backgroundColor: "var(--background)",
+            borderColor: "var(--border)",
+          }}
+        >
+          <Button variant="outline" onClick={handleVolver} className="w-48">
             Cancelar
           </Button>
-          <Button
-            onClick={handleConfirmarCompletado}
-            className="w-48"
-          >
+          <Button onClick={handleConfirmarCompletado} className="w-48">
             Ya completé el formulario
           </Button>
         </div>

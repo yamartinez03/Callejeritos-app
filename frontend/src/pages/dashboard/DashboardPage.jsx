@@ -84,7 +84,7 @@ const NAV_ITEMS = [
         roles: STAFF_ROLES,
       },
       {
-        title: "Ver Animales en Adopción",
+        title: "Animales en Adopción",
         key: "verAdopciones",
         icon: Eye,
         roles: ALL_AUTHENTICATED_ROLES,

@@ -12,7 +12,7 @@ const ConfiguracionFormulariosPage = () => {
       tipo: "ADOPCION",
       nombre: "Formulario de Adopción",
       ruta: "https://docs.google.com/forms/d/e/1FAIpQLSduzFJZg4xXXQN0_bRjH_LyElLOciNgVSY3Gla34kJwU_IZeQ/viewform?usp=publish-editor",
-      activo: true,
+      activo: false,
     },
     {
       id: 2,
@@ -37,18 +37,18 @@ const ConfiguracionFormulariosPage = () => {
   };
 
   const handleGuardar = (id) => {
-    setFormularios(formularios.map(f => 
-      f.id === id ? { ...f, ruta: nuevaRuta } : f
-    ));
+    setFormularios(
+      formularios.map((f) => (f.id === id ? { ...f, ruta: nuevaRuta } : f)),
+    );
     setEditandoId(null);
     setNuevaRuta("");
     alert("Formulario actualizado correctamente");
   };
 
   const handleToggleActivo = (id) => {
-    setFormularios(formularios.map(f => 
-      f.id === id ? { ...f, activo: !f.activo } : f
-    ));
+    setFormularios(
+      formularios.map((f) => (f.id === id ? { ...f, activo: !f.activo } : f)),
+    );
   };
 
   const handleAbrirFormulario = (ruta) => {
@@ -68,11 +68,24 @@ const ConfiguracionFormulariosPage = () => {
 
       <div className="space-y-4">
         {formularios.map((formulario) => (
-          <Card key={formulario.id}>
+          <Card
+            key={formulario.id}
+            className={
+              formulario.activo
+                ? "border-l-4 border-l-green-500"
+                : "border-l-4 border-l-gray-400 opacity-75"
+            }
+          >
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg">{formulario.nombre}</CardTitle>
-                <Badge className={formulario.activo ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
+                <Badge
+                  className={
+                    formulario.activo
+                      ? "bg-green-100 text-green-800 border-green-200"
+                      : "bg-gray-100 text-gray-800 border-gray-200"
+                  }
+                >
                   {formulario.activo ? "Activo" : "Inactivo"}
                 </Badge>
               </div>
@@ -90,10 +103,18 @@ const ConfiguracionFormulariosPage = () => {
                       placeholder="https://docs.google.com/forms/..."
                       className="flex-1"
                     />
-                    <Button size="icon" onClick={() => handleGuardar(formulario.id)}>
+                    <Button
+                      size="icon"
+                      onClick={() => handleGuardar(formulario.id)}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
                       <Check className="h-4 w-4" />
                     </Button>
-                    <Button size="icon" variant="outline" onClick={handleCancelar}>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      onClick={handleCancelar}
+                    >
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
@@ -126,13 +147,16 @@ const ConfiguracionFormulariosPage = () => {
 
               <div className="flex items-center justify-between pt-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">
-                    Estado:
-                  </span>
+                  <span className="text-sm text-muted-foreground">Estado:</span>
                   <Button
-                    variant="outline"
+                    variant={formulario.activo ? "outline" : "default"}
                     size="sm"
                     onClick={() => handleToggleActivo(formulario.id)}
+                    className={
+                      formulario.activo
+                        ? "text-red-600 border-red-200 hover:bg-red-50"
+                        : "bg-green-600 hover:bg-green-700"
+                    }
                   >
                     {formulario.activo ? "Desactivar" : "Activar"}
                   </Button>

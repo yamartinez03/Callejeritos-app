@@ -81,8 +81,21 @@ const ANIMALES_ADOPTION_MOCK = [
 const VerAdopcionesPage = ({ onNavegar }) => {
   const [animales, setAnimales] = useState(ANIMALES_ADOPTION_MOCK);
   const [busqueda, setBusqueda] = useState("");
+  const [form, setForm] = useState({
+    id: 1,
+    tipo: "ADOPCION",
+    nombre: "Formulario de Adopción",
+    ruta: "https://docs.google.com/forms/d/e/1FAIpQLSduzFJZg4xXXQN0_bRjH_LyElLOciNgVSY3Gla34kJwU_IZeQ/viewform?usp=publish_editor",
+    activo: true,
+  });
 
   const handleIniciarAdopcion = (animal) => {
+    if (!form.activo) {
+      alert(
+        "El formulario de adopción está temporalmente inactivo. Por favor, inténtalo más tarde.",
+      );
+      return;
+    }
     // Navegar al formulario con el ID del animal usando la función del dashboard
     if (onNavegar) {
       onNavegar("solicitarAdopcion", { animalId: animal.idanimal });
@@ -292,6 +305,25 @@ const VerAdopcionesPage = ({ onNavegar }) => {
     <div className="min-h-screen" style={{ backgroundColor: "var(--muted)" }}>
       {/* Contenido principal */}
       <main className="px-10 py-8">
+        {/* Banner de aviso si el formulario está inactivo */}
+        {!form.activo && (
+          <div
+            className="mb-6 p-4 rounded-lg border flex items-center gap-3"
+            style={{ backgroundColor: "#fef2f2", borderColor: "#fecaca" }}
+          >
+            <span className="text-2xl">⚠️</span>
+            <div>
+              <p className="font-semibold" style={{ color: "#dc2626" }}>
+                Formulario de Adopción Inactivo
+              </p>
+              <p className="text-sm" style={{ color: "#991b1b" }}>
+                El formulario de adopción está temporalmente deshabilitado. Por
+                favor, contáctate con el administrador.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Header de sección */}
         <div className="flex flex-col md:flex-row gap-3 items-start md:items-center justify-between mb-6">
           <div>
