@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardTitle, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, X, Clock, CheckCircle, XCircle, PawPrint } from "lucide-react";
+import { Clock, CheckCircle, XCircle, PawPrint } from "lucide-react";
 
 const MIS_SOLICITUDES_MOCK = [
   {
@@ -143,10 +143,7 @@ const SolicitudesAdopcionesList = () => {
   };
 
   return (
-    <Card
-      className="max-w-5xl mx-auto"
-      style={{ backgroundColor: "var(--card)" }}
-    >
+    <Card style={{ backgroundColor: "var(--card)" }}>
       <CardHeader>
         <CardTitle style={{ color: "var(--card-foreground)" }}>
           Tus Solicitudes de Adopción

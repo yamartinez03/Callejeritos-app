@@ -94,7 +94,7 @@ const ConsultarAdopcionesPage = () => {
 
       {/* Lista de solicitudes desplegable */}
       {mostrarSolicitudes && (
-        <div className="w-full md:w-1/4 md:order-2 md:sticky md:top-6">
+        <div className="py-4">
           <SolicitudesAdopcionesList />
         </div>
       )}
@@ -132,7 +132,7 @@ const ConsultarAdopcionesPage = () => {
 
       {/* Lista de animales adoptados */}
       {animalesFiltrados.length > 0 ? (
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6">
           {animalesFiltrados.map((animal) => (
             <Card key={animal.idanimal}>
               <CardContent className="p-6 mt-6">
@@ -165,38 +165,13 @@ const ConsultarAdopcionesPage = () => {
                       </p>
                     </div>
 
-                    {/* Banner de recordatorio de vacunación */}
-                    {animal.proximaVacunacion && (
-                      <div
-                        className="p-3 rounded-lg flex items-start gap-2"
-                        style={{ backgroundColor: "#fef3c7", color: "#92400e" }}
-                      >
-                        <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
-                        <div>
-                          <p className="font-medium text-sm">
-                            Próxima vacunación
-                          </p>
-                          <p className="text-xs">
-                            Recuerda que {animal.nombre} tiene vacunación
-                            programada para el {animal.proximaVacunacion}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
                     {/* Datos adicionales */}
-                    <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="grid grid-cols-1 gap-2 text-sm">
                       <div>
                         <span className="text-muted-foreground">
                           Fecha de adopción:
                         </span>
                         <span className="ml-2">{animal.fechaAdopcion}</span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">
-                          ID del animal:
-                        </span>
-                        <span className="ml-2">#{animal.idanimal}</span>
                       </div>
                     </div>
 
@@ -217,6 +192,22 @@ const ConsultarAdopcionesPage = () => {
                     </div>
                   </div>
                 </div>
+                {/* Banner de recordatorio de vacunación */}
+                {animal.proximaVacunacion && (
+                  <div
+                    className="p-3 mt-2 rounded-lg flex items-start gap-2"
+                    style={{ backgroundColor: "#fef3c7", color: "#92400e" }}
+                  >
+                    <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-sm">Próxima vacunación</p>
+                      <p className="text-xs">
+                        Recuerda que {animal.nombre} tiene vacunación programada
+                        para el {animal.proximaVacunacion}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}
