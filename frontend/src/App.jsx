@@ -1,25 +1,17 @@
 import { useState } from "react";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { STAFF_ROLES } from "@/lib/roles";
 import Login from "./Login/pages/Login";
 import LoginSuccess from "./Login/pages/LoginSuccess";
 import Registro from "./Login/pages/Registro";
 import Unauthorized from "./pages/Unauthorized";
+import { STAFF_ROLES } from "@/lib/roles";
 import { HogaresTransito } from "./transito/pages/HogaresTransito";
 import { NuevoHogar } from "./transito/pages/NuevoHogar";
-
-
-
-// No olvidarme de reemplazar  estos placeholders por pantallas reales cuando las chicas las tengan 
-function Dashboard() {
-  return <div className="p-8 text-foreground">Dashboard (placeholder)</div>;
-}
-function Gastos() {
-  return <div className="p-8 text-foreground">Gastos (placeholder)</div>;
-}
+import PublicacionesHeader from "./pages/publicaciones/PublicacionesHeader";
+import DashboardPage from "./pages/dashboard/DashboardPage";
 
 function AppRoutes() {
   const { login } = useAuth();
@@ -27,18 +19,31 @@ function AppRoutes() {
   const [justLoggedIn, setJustLoggedIn] = useState(null);
 
   const handleLogin = async ({ email, password }) => {
-    // Mientras no tengamos el  backend real uso  este usuario hardcodeado para poder navegar la app.
-    await new Promise((resolve) => setTimeout(resolve, 600)); 
-    if (email !== "admin@callejeritos.com" || password !== "admin123") {
+    // Mientras no tengamos el backend real uso este usuario hardcodeado para poder navegar la app.
+    await new Promise((resolve) => setTimeout(resolve, 600));
+
+    // Login con diferentes roles para pruebas transitante y admin
+    let data;
+    if (email === "admin@callejeritos.com" && password === "admin123") {
+      data = {
+        name: "María Acosta",
+        email,
+        role: "administrador",
+        roleLabel: "Administrador",
+      };
+    } else if (
+      email === "transitante@callejeritos.com" &&
+      password === "trans123"
+    ) {
+      data = {
+        name: "Juan Pérez",
+        email,
+        role: "transitante",
+        roleLabel: "Transitante",
+      };
+    } else {
       throw new Error("Correo o contraseña incorrectos.");
     }
-
-    const data = {
-      name: "María Acosta",
-      email,
-      role: "administrador",
-      roleLabel: "Administrador",
-    };
 
     /* Cuando tengamos el back borramos lo de arriba y usamos esto
     const res = await fetch("/api/login", {
@@ -58,12 +63,12 @@ function AppRoutes() {
     setJustLoggedIn(data);
     setTimeout(() => {
       setJustLoggedIn(null);
-      navigate("/", { replace: true });
+      navigate("/dashboard", { replace: true });
     }, 1500);
   };
 
   const handleRegistro = async ({ name, email, phone, role, password }) => {
-   // Mientras no tengamos el  backend real uso  este usuario hardcodeado para poder navegar la app.
+    // Mientras no tengamos el backend real uso este usuario hardcodeado para poder navegar la app.
     await new Promise((resolve) => setTimeout(resolve, 600));
     console.log("Registro simulado:", { name, email, phone, role, password });
 
@@ -91,54 +96,52 @@ function AppRoutes() {
 
   return (
     <Routes>
+      {/* Ruta pública - página principal */}
+      <Route path="/" element={<PublicacionesHeader />} />
+
+      {/* Rutas de autenticación */}
       <Route path="/login" element={<Login onSubmit={handleLogin} />} />
-      <Route path="/registro" element={<Registro onSubmit={handleRegistro} />} />
+      <Route
+        path="/registro"
+        element={<Registro onSubmit={handleRegistro} />}
+      />
       <Route path="/no-autorizado" element={<Unauthorized />} />
 
-      {/* cualquier usuario logueado, sin importar el rol */}
+      {/* Rutas protegidas - Dashboard con subrutas anidadas */}
       <Route
-        path="/"
+        path="/dashboard/*"
         element={
           <ProtectedRoute>
-            <Dashboard />
+            <DashboardPage />
           </ProtectedRoute>
         }
       />
-      {/* solo Administrador y Núcleo operativo */}
       <Route
-        path="/gastos"
+        path="/transito/hogares"
         element={
           <ProtectedRoute allowedRoles={STAFF_ROLES}>
-            <Gastos />
+            <HogaresTransito />
           </ProtectedRoute>
         }
       />
       <Route
-      path="/transito/hogares"
-      element={
-       <ProtectedRoute 
-      allowedRoles={STAFF_ROLES}> 
-      <HogaresTransito /> </ProtectedRoute> 
-      } 
-    />
-      <Route
-     path="/transito/hogares/nuevo" 
-     element={ 
-     <ProtectedRoute
-      allowedRoles={STAFF_ROLES}>
-     <NuevoHogar /> </ProtectedRoute> } />
+        path="/transito/hogares/nuevo"
+        element={
+          <ProtectedRoute allowedRoles={STAFF_ROLES}>
+            <NuevoHogar />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   );
 }
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <ThemeProvider>
-        <AuthProvider>
-          <AppRoutes />
-        </AuthProvider>
-      </ThemeProvider>
-    </BrowserRouter>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
