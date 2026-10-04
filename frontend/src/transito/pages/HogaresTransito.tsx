@@ -5,7 +5,6 @@ import { SectionHeader } from "../components/common/SectionHeader";
 import { EmptyState } from "../components/common/EmptyState";
 import { FiltrosHogares } from "../components/hogares/FiltrosHogares";
 import { HogarTable } from "../components/hogares/HogarTable";
-
 import { mockHogares } from "../mocks/Hogares";
 import type { HogarTransito } from "../types/transito";
 
