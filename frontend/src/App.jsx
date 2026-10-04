@@ -8,6 +8,10 @@ import Login from "./Login/pages/Login";
 import LoginSuccess from "./Login/pages/LoginSuccess";
 import Registro from "./Login/pages/Registro";
 import Unauthorized from "./pages/Unauthorized";
+import { HogaresTransito } from "./transito/pages/HogaresTransito";
+import { NuevoHogar } from "./transito/pages/NuevoHogar";
+
+
 
 // No olvidarme de reemplazar  estos placeholders por pantallas reales cuando las chicas las tengan 
 function Dashboard() {
@@ -53,6 +57,7 @@ function AppRoutes() {
     login(data);
     setJustLoggedIn(data);
     setTimeout(() => {
+      setJustLoggedIn(null);
       navigate("/", { replace: true });
     }, 1500);
   };
@@ -108,6 +113,20 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+      path="/transito/hogares"
+      element={
+       <ProtectedRoute 
+      allowedRoles={STAFF_ROLES}> 
+      <HogaresTransito /> </ProtectedRoute> 
+      } 
+    />
+      <Route
+     path="/transito/hogares/nuevo" 
+     element={ 
+     <ProtectedRoute
+      allowedRoles={STAFF_ROLES}>
+     <NuevoHogar /> </ProtectedRoute> } />
     </Routes>
   );
 }
