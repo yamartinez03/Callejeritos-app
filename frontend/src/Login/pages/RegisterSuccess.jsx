@@ -1,5 +1,6 @@
 import { CheckCircle2, History, BellRing, Wallet, ShieldCheck } from "lucide-react";
 import perrito from "../../assets/perrito.png";
+import LogoUtn from "../../assets/LogoUtn.png";
 import { Header } from "../components/Header";
 import { Button } from "../components/Button";
 import { ThemeToggle } from "@/components/theme-toggle";

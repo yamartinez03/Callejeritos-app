@@ -26,15 +26,6 @@ const FEATURES = [
   { icon: ShieldCheck, text: "Moderación de avistamientos" },
 ];
 
-const PAW_TRAIL = [
-  { top: 40, right: 40, rotate: -35 },
-  { top: 92, right: 12, rotate: -55 },
-  { top: 148, right: 44, rotate: -35 },
-  { top: 200, right: 16, rotate: -55 },
-  { top: 256, right: 48, rotate: -35 },
-  { top: 308, right: 20, rotate: -55 },
-];
-
 export default function Registro({ onSubmit }) {
   const navigate = useNavigate();
 

@@ -7,8 +7,12 @@ import Login from "./Login/pages/Login";
 import LoginSuccess from "./Login/pages/LoginSuccess";
 import Registro from "./Login/pages/Registro";
 import Unauthorized from "./pages/Unauthorized";
+import { STAFF_ROLES } from "@/lib/roles";
+import { HogaresTransito } from "./transito/pages/HogaresTransito";
+import { NuevoHogar } from "./transito/pages/NuevoHogar";
 import PublicacionesHeader from "./pages/publicaciones/PublicacionesHeader";
 import DashboardPage from "./pages/dashboard/DashboardPage";
+import PostulacionPublicaTransito from "./transito/pages/PostulacionPublicaTransito";
 
 function AppRoutes() {
   const { login } = useAuth();
@@ -95,6 +99,10 @@ function AppRoutes() {
     <Routes>
       {/* Ruta pública - página principal */}
       <Route path="/" element={<PublicacionesHeader />} />
+      <Route
+        path="/postulacion-transito"
+        element={<PostulacionPublicaTransito />}
+      />
 
       {/* Rutas de autenticación */}
       <Route path="/login" element={<Login onSubmit={handleLogin} />} />
@@ -110,6 +118,22 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <DashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/transito/hogares"
+        element={
+          <ProtectedRoute allowedRoles={STAFF_ROLES}>
+            <HogaresTransito />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/transito/hogares/nuevo"
+        element={
+          <ProtectedRoute allowedRoles={STAFF_ROLES}>
+            <NuevoHogar />
           </ProtectedRoute>
         }
       />
