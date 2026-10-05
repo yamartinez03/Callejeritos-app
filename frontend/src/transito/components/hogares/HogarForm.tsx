@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import {
   Home,
@@ -10,12 +9,14 @@ import {
   Plus,
   X,
 } from "lucide-react";
-
-import type { HogarTransito, TipoAnimal } from "../../types/transito";
+import type { EstadoHogar, HogarTransito, TipoAnimal } from "../../types/transito";
+import { Button } from "@/components/ui/button";
 
 interface HogarFormProps {
   initialData?: Partial<HogarTransito>;
-  onSubmit: (data: Omit<HogarTransito, "id" | "estado" | "ocupacion">) => void;
+  onSubmit: (
+    data: Omit<HogarTransito, "id" | "ocupacion">,
+  ) => string | void;
   onCancel?: () => void;
 }
 
@@ -28,6 +29,7 @@ interface FormData {
   tipoVivienda: string;
   tipoAnimal: TipoAnimal;
   capacidad: number;
+  estado: EstadoHogar;
   restricciones: string[];
   tieneOtrasMascotas: boolean;
 }
@@ -41,9 +43,15 @@ const INITIAL_FORM: FormData = {
   tipoVivienda: "",
   tipoAnimal: "PERRO",
   capacidad: 1,
+  estado: "DISPONIBLE",
   restricciones: [],
   tieneOtrasMascotas: false,
 };
+
+const inputClass =
+  "h-9 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring";
+
+const labelClass = "mb-1.5 block text-sm font-medium text-foreground";
 
 export function HogarForm({
   initialData,
@@ -54,6 +62,7 @@ export function HogarForm({
     ...INITIAL_FORM,
     ...initialData,
     capacidad: initialData?.capacidad ?? 1,
+    estado: initialData?.estado ?? "DISPONIBLE",
     restricciones: initialData?.restricciones ?? [],
     tieneOtrasMascotas: initialData?.tieneOtrasMascotas ?? false,
     tipoAnimal: initialData?.tipoAnimal ?? "PERRO",
@@ -61,30 +70,39 @@ export function HogarForm({
 
   const [nuevaRestriccion, setNuevaRestriccion] = useState("");
   const [errores, setErrores] = useState<Record<string, string>>({});
+  const [sexoAceptado, setSexoAceptado] = useState(
+    initialData?.restricciones?.some((item) => item.toLowerCase() === "solo machos")
+      ? "MACHO"
+      : initialData?.restricciones?.some(
+            (item) => item.toLowerCase() === "solo hembras",
+          )
+        ? "HEMBRA"
+        : "CUALQUIERA",
+  );
+  const [soloCachorros, setSoloCachorros] = useState(
+    initialData?.restricciones?.some(
+      (item) => item.toLowerCase() === "solo cachorros",
+    ) ?? false,
+  );
+  const [pesoMaximo, setPesoMaximo] = useState(
+    initialData?.restricciones
+      ?.find((item) => item.toLowerCase().startsWith("tamaño máximo:"))
+      ?.match(/(\d+(?:[.,]\d+)?)/)?.[1]
+      ?.replace(",", ".") ?? "",
+  );
 
   const actualizarCampo = <K extends keyof FormData>(
     campo: K,
     valor: FormData[K],
   ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [campo]: valor,
-    }));
-
-    setErrores((prev) => ({
-      ...prev,
-      [campo]: "",
-    }));
+    setFormData((prev) => ({ ...prev, [campo]: valor }));
+    setErrores((prev) => ({ ...prev, [campo]: "" }));
   };
 
   const agregarRestriccion = () => {
     const restriccion = nuevaRestriccion.trim();
 
-    if (!restriccion) {
-      return;
-    }
-
-    if (formData.restricciones.includes(restriccion)) {
+    if (!restriccion || formData.restricciones.includes(restriccion)) {
       return;
     }
 
@@ -92,7 +110,6 @@ export function HogarForm({
       ...formData.restricciones,
       restriccion,
     ]);
-
     setNuevaRestriccion("");
   };
 
@@ -107,49 +124,57 @@ export function HogarForm({
     const nuevosErrores: Record<string, string> = {};
 
     if (!formData.nombreTransitante.trim()) {
-      nuevosErrores.nombreTransitante = "Ingresá el nombre del transitario.";
+      nuevosErrores.nombreTransitante = "Ingresá el nombre.";
     }
-
     if (!formData.apellidoTransitante.trim()) {
-      nuevosErrores.apellidoTransitante =
-        "Ingresá el apellido del transitario.";
+      nuevosErrores.apellidoTransitante = "Ingresá el apellido.";
     }
-
     if (!formData.telefono.trim()) {
-      nuevosErrores.telefono = "Ingresá un teléfono de contacto.";
+      nuevosErrores.telefono = "Ingresá un teléfono.";
     }
-
     if (!formData.direccion.trim()) {
-      nuevosErrores.direccion = "Ingresá la dirección del hogar.";
+      nuevosErrores.direccion = "Ingresá la dirección.";
     }
-
     if (!formData.localidad.trim()) {
       nuevosErrores.localidad = "Ingresá la localidad.";
     }
-
     if (!formData.tipoVivienda) {
-      nuevosErrores.tipoVivienda =
-        "Seleccioná el tipo de vivienda.";
+      nuevosErrores.tipoVivienda = "Seleccioná la vivienda.";
     }
-
-    if (formData.capacidad < 1) {
+    if (!Number.isInteger(formData.capacidad) || formData.capacidad < 1) {
+      nuevosErrores.capacidad = "Ingresá una capacidad mínima de 1.";
+    }
+    if (
+      initialData?.ocupacion !== undefined &&
+      formData.capacidad < initialData.ocupacion
+    ) {
       nuevosErrores.capacidad =
-        "La capacidad debe ser de al menos 1 animal.";
+        "La capacidad no puede ser menor que la ocupación actual.";
     }
 
     setErrores(nuevosErrores);
-
     return Object.keys(nuevosErrores).length === 0;
   };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!validarFormulario()) {
-      return;
-    }
+    if (!validarFormulario()) return;
 
-    onSubmit({
+    const restriccionesPersonalizadas = formData.restricciones.filter(
+      (item) =>
+        !["solo machos", "solo hembras", "solo cachorros"].includes(
+          item.toLowerCase(),
+        ) && !item.toLowerCase().startsWith("tamaño máximo:"),
+    );
+    const restricciones = [
+      ...restriccionesPersonalizadas,
+      ...(sexoAceptado === "CUALQUIERA" ? [] : [`Solo ${sexoAceptado === "MACHO" ? "machos" : "hembras"}`]),
+      ...(soloCachorros ? ["Solo cachorros"] : []),
+      ...(pesoMaximo ? [`Tamaño máximo: ${pesoMaximo} kg`] : []),
+    ];
+
+    const error = onSubmit({
       nombreTransitante: formData.nombreTransitante.trim(),
       apellidoTransitante: formData.apellidoTransitante.trim(),
       telefono: formData.telefono.trim(),
@@ -158,230 +183,99 @@ export function HogarForm({
       tipoVivienda: formData.tipoVivienda,
       tipoAnimal: formData.tipoAnimal,
       capacidad: formData.capacidad,
-      restricciones: formData.restricciones,
+      estado: formData.estado,
+      restricciones,
       tieneOtrasMascotas: formData.tieneOtrasMascotas,
     });
+    if (error) setErrores((prev) => ({ ...prev, formulario: error }));
   };
 
+  const campoTexto = (
+    campo: "nombreTransitante" | "apellidoTransitante" | "telefono" |
+      "direccion" | "localidad",
+    etiqueta: string,
+    placeholder: string,
+    tipo = "text",
+  ) => (
+    <div>
+      <label className={labelClass}>{etiqueta} *</label>
+      <input
+        type={tipo}
+        value={formData[campo]}
+        onChange={(e) => actualizarCampo(campo, e.target.value)}
+        placeholder={placeholder}
+        className={inputClass}
+      />
+      {errores[campo] && (
+        <p className="mt-1 text-xs text-destructive">{errores[campo]}</p>
+      )}
+    </div>
+  );
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Datos del transitario */}
-      <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <div className="mb-5 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100 text-green-700">
-            <User size={20} />
-          </div>
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <section className="space-y-3">
+        <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          <User className="h-4 w-4 text-muted-foreground" />
+          Datos del transitario
+        </h3>
 
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">
-              Datos del transitario
-            </h2>
-            <p className="text-sm text-gray-500">
-              Información de contacto de la persona responsable.
-            </p>
-          </div>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Nombre *
-            </label>
-
-            <input
-              type="text"
-              value={formData.nombreTransitante}
-              onChange={(e) =>
-                actualizarCampo("nombreTransitante", e.target.value)
-              }
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
-              placeholder="Ej. María"
-            />
-
-            {errores.nombreTransitante && (
-              <p className="mt-1 text-sm text-red-600">
-                {errores.nombreTransitante}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Apellido *
-            </label>
-
-            <input
-              type="text"
-              value={formData.apellidoTransitante}
-              onChange={(e) =>
-                actualizarCampo("apellidoTransitante", e.target.value)
-              }
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
-              placeholder="Ej. López"
-            />
-
-            {errores.apellidoTransitante && (
-              <p className="mt-1 text-sm text-red-600">
-                {errores.apellidoTransitante}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Teléfono *
-            </label>
-
-            <div className="relative">
-              <Phone
-                size={18}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-              />
-
-              <input
-                type="tel"
-                value={formData.telefono}
-                onChange={(e) =>
-                  actualizarCampo("telefono", e.target.value)
-                }
-                className="w-full rounded-lg border border-gray-300 py-2.5 pl-10 pr-3 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
-                placeholder="Ej. 221-555-1234"
-              />
-            </div>
-
-            {errores.telefono && (
-              <p className="mt-1 text-sm text-red-600">
-                {errores.telefono}
-              </p>
-            )}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {campoTexto("nombreTransitante", "Nombre", "Ej. María")}
+          {campoTexto("apellidoTransitante", "Apellido", "Ej. López")}
+          <div className="sm:col-span-2">
+            {campoTexto("telefono", "Teléfono", "Ej. 221-555-1234", "tel")}
           </div>
         </div>
       </section>
 
-      {/* Ubicación */}
-      <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <div className="mb-5 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-blue-700">
-            <MapPin size={20} />
-          </div>
+      <section className="space-y-3">
+        <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          <MapPin className="h-4 w-4 text-muted-foreground" />
+          Ubicación
+        </h3>
 
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">
-              Ubicación
-            </h2>
-            <p className="text-sm text-gray-500">
-              Datos del domicilio donde se realizará el tránsito.
-            </p>
-          </div>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Dirección *
-            </label>
-
-            <input
-              type="text"
-              value={formData.direccion}
-              onChange={(e) =>
-                actualizarCampo("direccion", e.target.value)
-              }
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
-              placeholder="Ej. Calle 10 123"
-            />
-
-            {errores.direccion && (
-              <p className="mt-1 text-sm text-red-600">
-                {errores.direccion}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Localidad *
-            </label>
-
-            <input
-              type="text"
-              value={formData.localidad}
-              onChange={(e) =>
-                actualizarCampo("localidad", e.target.value)
-              }
-              className="w-full rounded-lg border border-gray-300 px-3 py-2.5 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
-              placeholder="Ej. Villa Elisa"
-            />
-
-            {errores.localidad && (
-              <p className="mt-1 text-sm text-red-600">
-                {errores.localidad}
-              </p>
-            )}
-          </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {campoTexto("direccion", "Dirección", "Ej. Calle 10 123")}
+          {campoTexto("localidad", "Localidad", "Ej. La Plata")}
         </div>
       </section>
 
-      {/* Características del hogar */}
-      <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <div className="mb-5 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100 text-purple-700">
-            <Home size={20} />
-          </div>
+      <section className="space-y-3">
+        <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          <Home className="h-4 w-4 text-muted-foreground" />
+          Características del hogar
+        </h3>
 
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">
-              Características del hogar
-            </h2>
-            <p className="text-sm text-gray-500">
-              Indicá qué animales puede recibir y las condiciones del hogar.
-            </p>
-          </div>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Tipo de vivienda *
-            </label>
-
+            <label className={labelClass}>Tipo de vivienda *</label>
             <select
               value={formData.tipoVivienda}
-              onChange={(e) =>
-                actualizarCampo("tipoVivienda", e.target.value)
-              }
-              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
+              onChange={(e) => actualizarCampo("tipoVivienda", e.target.value)}
+              className={inputClass}
             >
               <option value="">Seleccionar...</option>
               <option value="Casa">Casa</option>
               <option value="Casa con patio">Casa con patio</option>
-              <option value="Casa con patio cerrado">
-                Casa con patio cerrado
-              </option>
+              <option value="Casa con patio cerrado">Casa con patio cerrado</option>
               <option value="Departamento">Departamento</option>
             </select>
-
             {errores.tipoVivienda && (
-              <p className="mt-1 text-sm text-red-600">
+              <p className="mt-1 text-xs text-destructive">
                 {errores.tipoVivienda}
               </p>
             )}
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Tipo de animal *
-            </label>
-
+            <label className={labelClass}>Tipo de animal *</label>
             <select
               value={formData.tipoAnimal}
               onChange={(e) =>
-                actualizarCampo(
-                  "tipoAnimal",
-                  e.target.value as TipoAnimal,
-                )
+                actualizarCampo("tipoAnimal", e.target.value as TipoAnimal)
               }
-              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
+              className={inputClass}
             >
               <option value="PERRO">Perros</option>
               <option value="GATO">Gatos</option>
@@ -390,69 +284,79 @@ export function HogarForm({
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
-              Capacidad máxima *
-            </label>
-
+            <label className={labelClass}>Capacidad máxima *</label>
             <div className="relative">
-              <Users
-                size={18}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-              />
-
+              <Users className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="number"
                 min={1}
+                step={1}
                 value={formData.capacidad}
                 onChange={(e) =>
-                  actualizarCampo(
-                    "capacidad",
-                    Number(e.target.value),
-                  )
+                  actualizarCampo("capacidad", Number(e.target.value))
                 }
-                className="w-full rounded-lg border border-gray-300 py-2.5 pl-10 pr-3 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
+                className={`${inputClass} pl-9`}
               />
             </div>
-
             {errores.capacidad && (
-              <p className="mt-1 text-sm text-red-600">
+              <p className="mt-1 text-xs text-destructive">
                 {errores.capacidad}
               </p>
             )}
           </div>
 
-          <div className="flex items-center gap-3 pt-7">
+          <label className="flex items-center gap-2 self-center text-sm text-foreground">
             <input
-              id="otras-mascotas"
               type="checkbox"
               checked={formData.tieneOtrasMascotas}
               onChange={(e) =>
-                actualizarCampo(
-                  "tieneOtrasMascotas",
-                  e.target.checked,
-                )
+                actualizarCampo("tieneOtrasMascotas", e.target.checked)
               }
-              className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+              className="h-4 w-4 accent-primary"
             />
-
-            <label
-              htmlFor="otras-mascotas"
-              className="text-sm font-medium text-gray-700"
-            >
-              Tiene otras mascotas
-            </label>
-          </div>
+            Tiene otras mascotas
+          </label>
         </div>
 
-        {/* Restricciones */}
-        <div className="mt-6">
-          <label className="mb-1.5 block text-sm font-medium text-gray-700">
-            Restricciones o condiciones
-          </label>
-
+        <div>
+          <label className={labelClass}>Restricciones o condiciones</label>
+          <div className="mb-3 grid gap-3 sm:grid-cols-2">
+            <label className="space-y-1.5 text-sm font-medium text-foreground">
+              Sexo aceptado
+              <select
+                value={sexoAceptado}
+                onChange={(event) => setSexoAceptado(event.target.value)}
+                className={inputClass}
+              >
+                <option value="CUALQUIERA">Cualquiera</option>
+                <option value="MACHO">Solo machos</option>
+                <option value="HEMBRA">Solo hembras</option>
+              </select>
+            </label>
+            <label className="space-y-1.5 text-sm font-medium text-foreground">
+              Peso máximo (kg)
+              <input
+                type="number"
+                min="0.1"
+                step="0.1"
+                value={pesoMaximo}
+                onChange={(event) => setPesoMaximo(event.target.value)}
+                className={inputClass}
+                placeholder="Sin límite"
+              />
+            </label>
+            <label className="flex items-center gap-2 text-sm text-foreground sm:col-span-2">
+              <input
+                type="checkbox"
+                checked={soloCachorros}
+                onChange={(event) => setSoloCachorros(event.target.checked)}
+                className="h-4 w-4 accent-primary"
+              />
+              Acepta solo cachorros
+            </label>
+          </div>
           <div className="flex gap-2">
             <input
-              type="text"
               value={nuevaRestriccion}
               onChange={(e) => setNuevaRestriccion(e.target.value)}
               onKeyDown={(e) => {
@@ -461,38 +365,36 @@ export function HogarForm({
                   agregarRestriccion();
                 }
               }}
-              className="flex-1 rounded-lg border border-gray-300 px-3 py-2.5 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
+              className={inputClass}
               placeholder="Ej. No cachorros"
             />
-
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="default"
               onClick={agregarRestriccion}
-              className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+              className="shrink-0 rounded-full font-semibold"
             >
-              <Plus size={18} />
+              <Plus className="mr-1 h-4 w-4" />
               Agregar
-            </button>
+            </Button>
           </div>
 
           {formData.restricciones.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-2 flex flex-wrap gap-2">
               {formData.restricciones.map((restriccion) => (
                 <span
                   key={restriccion}
-                  className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1.5 text-sm text-gray-700"
+                  className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-3 py-1 text-xs text-foreground"
                 >
                   {restriccion}
-
                   <button
                     type="button"
-                    onClick={() =>
-                      eliminarRestriccion(restriccion)
-                    }
-                    className="text-gray-400 transition hover:text-red-500"
+                    onClick={() => eliminarRestriccion(restriccion)}
+                    className="rounded-full text-muted-foreground hover:bg-destructive hover:text-destructive-foreground"
                     aria-label={`Eliminar ${restriccion}`}
                   >
-                    <X size={15} />
+                    <X className="h-3 w-3" />
                   </button>
                 </span>
               ))}
@@ -501,26 +403,49 @@ export function HogarForm({
         </div>
       </section>
 
-      {/* Acciones */}
-      <div className="flex justify-end gap-3">
+      {initialData?.id && (
+        <div>
+          <label className={labelClass} htmlFor="estado-hogar">
+            Estado del hogar
+          </label>
+          <select
+            id="estado-hogar"
+            value={formData.estado}
+            onChange={(event) =>
+              actualizarCampo("estado", event.target.value as EstadoHogar)
+            }
+            className={inputClass}
+          >
+            <option value="DISPONIBLE">Disponible</option>
+            <option value="OCUPADO">Ocupado</option>
+            <option value="PAUSADO">Pausado</option>
+            <option value="NO_DISPONIBLE">No disponible</option>
+          </select>
+        </div>
+      )}
+
+      <div className="flex justify-end gap-2 border-t border-border pt-4">
         {onCancel && (
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="default"
+            className="rounded-full font-semibold"
             onClick={onCancel}
-            className="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
           >
             Cancelar
-          </button>
+          </Button>
         )}
-
-        <button
-          type="submit"
-          className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-green-700"
-        >
-          <PawPrint size={18} />
-          Registrar hogar
-        </button>
+        <Button type="submit" size="default" className="rounded-full font-semibold">
+          <PawPrint className="mr-2 h-4 w-4" />
+          {initialData?.id ? "Guardar cambios" : "Registrar hogar"}
+        </Button>
       </div>
+      {errores.formulario && (
+        <p role="alert" className="text-sm text-destructive">
+          {errores.formulario}
+        </p>
+      )}
     </form>
   );
 }

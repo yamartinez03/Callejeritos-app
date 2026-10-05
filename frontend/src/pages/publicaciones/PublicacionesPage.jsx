@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import PublicacionCard from "./components/PublicacionCard";
 import CrearPublicacionForm from "./components/CrearPublicacionForm";
+import { ANIMALES_MOCK } from "@/mocks/animales";
 
 const PUBLICACIONES_MOCK = [
   {
@@ -109,80 +110,6 @@ const PUBLICACIONES_MOCK = [
         idfoto: 5,
         idpub: 4,
         ruta: "https://as1.ftcdn.net/v2/jpg/00/35/53/06/1000_F_35530672_OQKsZsHq5ivfgwgEGMDGQCkCxHlMAMeO.jpg",
-      },
-    ],
-  },
-];
-
-const ANIMALES_MOCK = [
-  {
-    idanimal: 1,
-    idespecie: 1,
-    nombre: "Max",
-    sexo: "MACHO",
-    edadestimada: 3,
-    colorpelaje: "Negro y Dorado",
-    peso: 25.5,
-    castrado: true,
-    lugarorigen: "Calle 12, La Plata",
-    estado: "EN_ADOPCION",
-    fechaingreso: "2026-07-15",
-    lactante: false,
-    especie: "Perro",
-    fotos: [
-      {
-        idfoto: 6,
-        idanimal: 1,
-        ruta: "https://media.istockphoto.com/id/467923438/photo/silly-dog-tilts-head-in-front-of-barn.jpg?s=612x612&w=0&k=20&c=haPwfoPl_ggvNKAga_Qv4r88qWdcpH-qZ5DaBba6-8U=",
-      },
-    ],
-  },
-  {
-    idanimal: 2,
-    idespecie: 1,
-    nombre: "Luna",
-    sexo: "HEMBRA",
-    edadestimada: 2,
-    colorpelaje: "Negro",
-    peso: 4.2,
-    castrado: true,
-    lugarorigen: "Parque Saavedra, La Plata",
-    estado: "EN_TRANSITO",
-    fechaingreso: "2026-08-01",
-    lactante: true,
-    especie: "Gato",
-    fotos: [
-      {
-        idfoto: 7,
-        idanimal: 2,
-        ruta: "https://media.istockphoto.com/id/1186954832/photo/little-black-kitten-playing-and-enjoys-with-orange-ball-at-living-room-of-house.jpg?s=612x612&w=0&k=20&c=Qa0SrgHouoEUnsAUj-L-bKeQSQsw769P4cJCPrK6uMk=",
-      },
-    ],
-  },
-  {
-    idanimal: 3,
-    idespecie: 1,
-    nombre: "Rocky",
-    sexo: "MACHO",
-    edadestimada: 5,
-    colorpelaje: "Gris",
-    peso: 30.0,
-    castrado: true,
-    lugarorigen: "Av. 7, La Plata",
-    estado: "EN_ADOPCION",
-    fechaingreso: "2026-06-20",
-    lactante: false,
-    especie: "Perro",
-    fotos: [
-      {
-        idfoto: 8,
-        idanimal: 3,
-        ruta: "https://media.istockphoto.com/id/2202652356/photo/a-dog-with-sad-eyes.jpg?s=612x612&w=0&k=20&c=6EPYK_oMWFRXfsSUocs0XyVRmTIy9FBuy5O6QDfEPNI=",
-      },
-      {
-        idfoto: 9,
-        idanimal: 3,
-        ruta: "https://media.istockphoto.com/id/2190589171/photo/a-dog-with-sad-eyes.jpg?s=612x612&w=0&k=20&c=IbjANPhXf6nKjza8Jc9XF4n_NVvA1mmyy1_5na1QL6M=",
       },
     ],
   },

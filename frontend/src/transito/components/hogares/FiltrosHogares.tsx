@@ -25,10 +25,10 @@ export function FiltrosHogares({
   onLimpiar,
 }: FiltrosHogaresProps) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-      <div className="mb-4 flex items-center gap-2">
+    <div className="text-card-foreground">
+      <div className="mb-4 flex items-center gap-2 pt-2">
         <Filter size={18} />
-        <h3 className="font-semibold text-gray-800">
+        <h3 className="font-semibold text-foreground">
           Buscar hogares
         </h3>
       </div>
@@ -37,7 +37,7 @@ export function FiltrosHogares({
         <div className="relative">
           <Search
             size={17}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
           />
 
           <input
@@ -45,14 +45,14 @@ export function FiltrosHogares({
             placeholder="Buscar por nombre..."
             value={busqueda}
             onChange={(e) => onBusquedaChange(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 py-2.5 pl-9 pr-3 text-sm outline-none focus:border-green-500"
+            className="w-full rounded-lg border border-input bg-background py-2.5 pl-9 pr-3 text-sm text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
           />
         </div>
 
         <select
           value={estado}
           onChange={(e) => onEstadoChange(e.target.value)}
-          className="rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-green-500"
+          className="rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <option value="">Todos los estados</option>
           <option value="DISPONIBLE">Disponible</option>
@@ -66,7 +66,7 @@ export function FiltrosHogares({
         <select
           value={localidad}
           onChange={(e) => onLocalidadChange(e.target.value)}
-          className="rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-green-500"
+          className="rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <option value="">Todas las localidades</option>
           <option value="Villa Elisa">Villa Elisa</option>
@@ -78,7 +78,7 @@ export function FiltrosHogares({
         <select
           value={tipoAnimal}
           onChange={(e) => onTipoAnimalChange(e.target.value)}
-          className="rounded-lg border border-gray-300 px-3 py-2.5 text-sm outline-none focus:border-green-500"
+          className="rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <option value="">Todos los animales</option>
           <option value="PERRO">Perros</option>
@@ -90,9 +90,9 @@ export function FiltrosHogares({
       <button
         type="button"
         onClick={onLimpiar}
-        className="mt-3 inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800"
+        className="mt-3 inline-flex h-6 items-center gap-1 rounded-full border border-border px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground"
       >
-        <X size={15} />
+        <X size={13} />
         Limpiar filtros
       </button>
     </div>

@@ -16,23 +16,23 @@ const CONFIG_ESTADO: Record<
   }
 > = {
   DISPONIBLE: {
-    label: "Disponible",
-    className: "bg-green-100 text-green-700",
+    label: "Habilitado",
+    className: "bg-green-100 text-green-700 dark:bg-green-950/50 dark:text-green-300",
     icon: CheckCircle,
   },
   OCUPADO: {
     label: "Ocupado",
-    className: "bg-blue-100 text-blue-700",
+    className: "bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300",
     icon: Clock,
   },
   PAUSADO: {
     label: "Pausado",
-    className: "bg-yellow-100 text-yellow-700",
+    className: "bg-yellow-100 text-yellow-700 dark:bg-yellow-950/50 dark:text-yellow-300",
     icon: PauseCircle,
   },
   NO_DISPONIBLE: {
     label: "No disponible",
-    className: "bg-red-100 text-red-700",
+    className: "bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-300",
     icon: XCircle,
   },
 };
@@ -52,4 +52,3 @@ export function HogarStatusBadge({
     </span>
   );
 }
-

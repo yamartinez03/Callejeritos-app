@@ -12,6 +12,7 @@ import { HogaresTransito } from "./transito/pages/HogaresTransito";
 import { NuevoHogar } from "./transito/pages/NuevoHogar";
 import PublicacionesHeader from "./pages/publicaciones/PublicacionesHeader";
 import DashboardPage from "./pages/dashboard/DashboardPage";
+import PostulacionPublicaTransito from "./transito/pages/PostulacionPublicaTransito";
 
 function AppRoutes() {
   const { login } = useAuth();
@@ -98,6 +99,10 @@ function AppRoutes() {
     <Routes>
       {/* Ruta pública - página principal */}
       <Route path="/" element={<PublicacionesHeader />} />
+      <Route
+        path="/postulacion-transito"
+        element={<PostulacionPublicaTransito />}
+      />
 
       {/* Rutas de autenticación */}
       <Route path="/login" element={<Login onSubmit={handleLogin} />} />

@@ -82,6 +82,15 @@ const PublicacionesHeader = () => {
         <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
           <ThemeToggle />
           <Button
+            variant="outline"
+            size="sm"
+            className="font-semibold text-xs sm:text-sm"
+            onClick={() => navigate("/postulacion-transito")}
+          >
+            <span className="sm:hidden">Postular</span>
+            <span className="hidden sm:inline">Postularme como hogar</span>
+          </Button>
+          <Button
             size="sm"
             className="font-semibold text-xs sm:text-sm px-2.5 sm:px-4 py-1 sm:py-2 h-auto"
             onClick={() => navigate("/login")}

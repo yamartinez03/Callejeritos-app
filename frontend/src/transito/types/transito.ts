@@ -12,7 +12,8 @@ export type TipoAnimal =
 
 export type EstadoTransito =
   | "ACTIVO"
-  | "FINALIZADO";
+  | "FINALIZADO"
+  | "CANCELADO";
 
 export type MotivoEgreso =
   | "ADOPCION"
@@ -62,6 +63,11 @@ export interface Transito {
   fechaFinReal?: string;
 
   observaciones?: string;
+  motivoCancelacion?: string;
+  reportesSalud?: {
+    fecha: string;
+    detalle: string;
+  }[];
 
   estado: EstadoTransito;
 
@@ -81,10 +87,14 @@ export interface PostulacionTransito {
 
   tipoVivienda: string;
 
+  horariosAusencia: string;
   tienePatio: boolean;
+  consentimientoFamiliar: boolean;
   tieneOtrasMascotas: boolean;
+  detalleOtrasMascotas: string;
 
   experienciaPrevia: boolean;
+  tipoAnimal: TipoAnimal;
 
   estado: EstadoPostulacion;
 

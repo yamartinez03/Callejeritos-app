@@ -8,12 +8,11 @@ export function NuevoHogar() {
   const navigate = useNavigate();
 
   const handleRegistrar = (
-    data: Omit<HogarTransito, "id" | "estado" | "ocupacion">,
+    data: Omit<HogarTransito, "id" | "ocupacion">,
   ) => {
     const nuevoHogar: HogarTransito = {
       ...data,
       id: `HT-${Date.now()}`,
-      estado: "DISPONIBLE",
       ocupacion: 0,
     };
 
@@ -32,7 +31,7 @@ export function NuevoHogar() {
           <button
             type="button"
             onClick={() => navigate("/transito/hogares")}
-            className="mb-3 inline-flex items-center gap-2 text-sm font-medium text-gray-500 transition hover:text-gray-900"
+            className="mb-3 inline-flex h-8 items-center gap-2 rounded-full border border-border px-4 text-sm font-medium text-muted-foreground transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground"
           >
             <ArrowLeft size={18} />
             Volver a hogares

@@ -15,11 +15,11 @@ export function CapacityBar({ ocupacion, capacidad }: CapacityBarProps) {
 
   return (
     <div className="w-full space-y-1">
-      <div className="flex justify-between text-xs font-medium text-gray-600">
+      <div className="flex justify-between text-xs font-medium text-muted-foreground">
         <span>{ocupacion} de {capacidad}</span>
         <span>{porcentaje}%</span>
       </div>
-      <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
         <div
           className={`h-full ${barColor} transition-all duration-300`}
           style={{ width: `${porcentaje}%` }}
@@ -28,4 +28,3 @@ export function CapacityBar({ ocupacion, capacidad }: CapacityBarProps) {
     </div>
   );
 }
-

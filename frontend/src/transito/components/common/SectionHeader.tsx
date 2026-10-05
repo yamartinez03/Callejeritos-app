@@ -21,7 +21,7 @@ export function SectionHeader({
             <button
              type="button" 
             onClick={onBack}
-            className="mt-1 rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+            className="mt-1 rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
             aria-label="Volver"
              > 
             <ArrowLeft size={20} />
@@ -29,11 +29,11 @@ export function SectionHeader({
              )}
              <div>
             <h1
-              className="text-2xl font-bold text-gray-900"> 
+              className="text-2xl font-bold text-foreground">
                 {title}
                 </h1>
                 {description && ( 
-                    <p className="mt-1 text-sm text-gray-500"> 
+                    <p className="mt-1 text-sm text-muted-foreground">
                     {description}
                     </p>
                  )}

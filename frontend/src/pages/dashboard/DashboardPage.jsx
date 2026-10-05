@@ -25,11 +25,21 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronRight, Eye, FileText, LogOut, BookCheck } from "lucide-react";
+import {
+  ChevronRight,
+  Eye,
+  FileText,
+  LogOut,
+  BookCheck,
+  PawPrint,
+  ClipboardList,
+} from "lucide-react";
 import logo from "@/assets/callejeritos-logo.png";
 // Avatar de ejemplo mientras no tenemos el backend
 import avatarEjemplo from "@/assets/ejemploUser.jpg";
 import PublicacionesPage from "../publicaciones/PublicacionesPage";
+import { HogaresTransito } from "@/transito/pages/HogaresTransito";
+import PostulacionesTransito from "@/transito/pages/PostulacionesTransito";
 
 // ─── Navegación del sidebar ───────────────────────────────────────────────────
 // Cada módulo nuevo que agreguen va acá como un objeto en el array `NAV_ITEMS`.
@@ -55,6 +65,25 @@ const NAV_ITEMS = [
         key: "verPublicacion",
         icon: Eye, // <--- Igual acá
         roles: ALL_AUTHENTICATED_ROLES,
+      },
+    ],
+  },
+  {
+    title: "Tránsito",
+    icon: PawPrint,
+    roles: STAFF_ROLES,
+    subitems: [
+      {
+        title: "Hogares de tránsito",
+        icon: PawPrint,
+        key: "transito",
+        roles: STAFF_ROLES,
+      },
+      {
+        title: "Postulaciones",
+        icon: ClipboardList,
+        key: "postulacionesTransito",
+        roles: STAFF_ROLES,
       },
     ],
   },
@@ -117,11 +146,13 @@ function renderContent(currentPage) {
           </p>
         </div>
       );
+    case "transito":
+      return <HogaresTransito />;
+    case "postulacionesTransito":
+      return <PostulacionesTransito />;
     // ── AGREGAR NUEVOS CASES ACÁ ───────────────────────────────────────────
     // case "animales":
     //   return <AnimalesPage />;
-    // case "transito":
-    //   return <TransitoPage />;
     // case "adopciones":
     //   return <AdopcionesPage />;
     // case "inventario":
@@ -140,7 +171,6 @@ function renderContent(currentPage) {
       );
   }
 }
-
 // ─── Sidebar interno ──────────────────────────────────────────────────────────
 function AppSidebar({ currentPage, onPageSelect, user, onLogout }) {
   const { setOpenMobile } = useSidebar();
@@ -229,7 +259,10 @@ function AppSidebar({ currentPage, onPageSelect, user, onLogout }) {
                 >
                   <SidebarMenuItem>
                     <CollapsibleTrigger asChild>
-                      <SidebarMenuButton tooltip={item.title}>
+                      <SidebarMenuButton
+                        tooltip={item.title}
+                        className="h-8 rounded-full border border-border px-3 text-sm text-muted-foreground transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground data-active:border-primary data-active:bg-primary data-active:text-primary-foreground"
+                      >
                         {ItemIcon && <ItemIcon />}
                         <span style={{ color: "var(--sidebar-foreground)" }}>
                           {item.title}
@@ -249,6 +282,7 @@ function AppSidebar({ currentPage, onPageSelect, user, onLogout }) {
                               <SidebarMenuSubButton
                                 isActive={currentPage === sub.key}
                                 onClick={() => handleSelectPage(sub.key)}
+                                className="h-8 rounded-full border border-border px-3 text-sm text-muted-foreground transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground data-active:border-primary data-active:bg-primary data-active:text-primary-foreground"
                               >
                                 {/* Se renderiza dinámicamente si el subítem tiene ícono asignado */}
                                 {SubIcon && <SubIcon className="h-3 w-3" />}
@@ -273,6 +307,7 @@ function AppSidebar({ currentPage, onPageSelect, user, onLogout }) {
                     isActive={currentPage === item.key}
                     onClick={() => handleSelectPage(item.key)}
                     tooltip={item.title}
+                    className="h-8 rounded-full border border-border px-3 text-sm text-muted-foreground transition-colors hover:border-primary hover:bg-primary hover:text-primary-foreground data-active:border-primary data-active:bg-primary data-active:text-primary-foreground"
                   >
                     {ItemIcon && <ItemIcon />}
                     <span style={{ color: "var(--sidebar-foreground)" }}>
@@ -329,7 +364,7 @@ function AppSidebar({ currentPage, onPageSelect, user, onLogout }) {
             <SidebarMenuButton
               onClick={onLogout}
               tooltip="Cerrar sesión"
-              className="group/logout flex items-center justify-center gap-2.5 w-full py-2.5 px-3 rounded-lg border border-red-500/50 dark:border-red-600/40 bg-red-500 dark:bg-red-600 text-white font-medium text-xs shadow-2xs hover:bg-red-600 dark:hover:bg-red-700 hover:border-red-600 transition-all duration-200 active:scale-[0.98] cursor-pointer"
+              className="group/logout flex h-8 w-full items-center justify-center gap-2 rounded-full border border-primary bg-primary px-3 text-sm font-semibold text-primary-foreground transition-colors hover:border-primary hover:bg-primary/90"
             >
               <LogOut className="h-4 w-4 transition-transform duration-200 group-hover/logout:-translate-x-0.5" />
               <span>Cerrar sesión</span>
