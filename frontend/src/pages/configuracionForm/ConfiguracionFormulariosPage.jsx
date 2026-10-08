@@ -11,7 +11,8 @@ const ConfiguracionFormulariosPage = () => {
       id: 1,
       tipo: "ADOPCION",
       nombre: "Formulario de Adopción",
-      ruta: "https://docs.google.com/forms/d/e/1FAIpQLSduzFJZg4xXXQN0_bRjH_LyElLOciNgVSY3Gla34kJwU_IZeQ/viewform?usp=publish-editor",
+      ruta: "https://docs.google.com/forms/d/e/1FAIpQLSe8faOJO_THW_SZ09D3p9FMmLHCvX7IW2HulaMr7HvSIh5MeA/viewform?usp=publish_editor",
+      rutaAdmin: "https://docs.google.com/forms/d/164DkeOhf-gfe2YaalygF8xO1r7DTenVAY-KjfT98LdY/edit",
       activo: false,
     },
     {
@@ -25,23 +26,29 @@ const ConfiguracionFormulariosPage = () => {
 
   const [editandoId, setEditandoId] = useState(null);
   const [nuevaRuta, setNuevaRuta] = useState("");
+  const [nuevaRutaAdmin, setNuevaRutaAdmin] = useState("");
 
   const handleEditar = (formulario) => {
     setEditandoId(formulario.id);
     setNuevaRuta(formulario.ruta);
+    setNuevaRutaAdmin(formulario.rutaAdmin || "");
   };
 
   const handleCancelar = () => {
     setEditandoId(null);
     setNuevaRuta("");
+    setNuevaRutaAdmin("");
   };
 
   const handleGuardar = (id) => {
     setFormularios(
-      formularios.map((f) => (f.id === id ? { ...f, ruta: nuevaRuta } : f)),
+      formularios.map((f) =>
+        f.id === id ? { ...f, ruta: nuevaRuta, rutaAdmin: nuevaRutaAdmin } : f,
+      ),
     );
     setEditandoId(null);
     setNuevaRuta("");
+    setNuevaRutaAdmin("");
     alert("Formulario actualizado correctamente");
   };
 
@@ -93,31 +100,15 @@ const ConfiguracionFormulariosPage = () => {
             <CardContent className="space-y-4">
               <div>
                 <label className="text-sm font-medium mb-2 block">
-                  URL del Formulario
+                  URL del Formulario (Público)
                 </label>
                 {editandoId === formulario.id ? (
-                  <div className="flex gap-2">
-                    <Input
-                      value={nuevaRuta}
-                      onChange={(e) => setNuevaRuta(e.target.value)}
-                      placeholder="https://docs.google.com/forms/..."
-                      className="flex-1"
-                    />
-                    <Button
-                      size="icon"
-                      onClick={() => handleGuardar(formulario.id)}
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      <Check className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      onClick={handleCancelar}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  <Input
+                    value={nuevaRuta}
+                    onChange={(e) => setNuevaRuta(e.target.value)}
+                    placeholder="https://docs.google.com/forms/..."
+                    className="flex-1"
+                  />
                 ) : (
                   <div className="flex gap-2 items-center">
                     <Input
@@ -125,13 +116,6 @@ const ConfiguracionFormulariosPage = () => {
                       disabled
                       className="flex-1"
                     />
-                    <Button
-                      size="icon"
-                      variant="outline"
-                      onClick={() => handleEditar(formulario)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
                     {formulario.ruta && (
                       <Button
                         size="icon"
@@ -145,8 +129,65 @@ const ConfiguracionFormulariosPage = () => {
                 )}
               </div>
 
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  URL del Formulario (Admin - Edición)
+                </label>
+                {editandoId === formulario.id ? (
+                  <Input
+                    value={nuevaRutaAdmin}
+                    onChange={(e) => setNuevaRutaAdmin(e.target.value)}
+                    placeholder="https://docs.google.com/forms/.../edit"
+                    className="flex-1"
+                  />
+                ) : (
+                  <div className="flex gap-2 items-center">
+                    <Input
+                      value={formulario.rutaAdmin || "No configurado"}
+                      disabled
+                      className="flex-1"
+                    />
+                    {formulario.rutaAdmin && (
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={() => handleAbrirFormulario(formulario.rutaAdmin)}
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+
               <div className="flex items-center justify-between pt-2">
                 <div className="flex items-center gap-2">
+                  {editandoId === formulario.id ? (
+                    <>
+                      <Button
+                        size="icon"
+                        onClick={() => handleGuardar(formulario.id)}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        <Check className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={handleCancelar}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      onClick={() => handleEditar(formulario)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  )}
                   <span className="text-sm text-muted-foreground">Estado:</span>
                   <Button
                     variant={formulario.activo ? "outline" : "default"}

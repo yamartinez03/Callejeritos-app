@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Search, X, Upload, AlertCircle, PawPrint } from "lucide-react";
+import { Search, X, Upload, AlertCircle, PawPrint, ExternalLink } from "lucide-react";
 import SolicitudesAdopcionesList from "./components/SolicitudesAdopcionesList";
 
 const ANIMALES_ADOPTADOS_MOCK = [
@@ -139,18 +139,24 @@ const ConsultarAdopcionesPage = () => {
                 <div className="flex gap-6 items-start">
                   {/* Foto del animal */}
                   <div className="shrink-0 flex flex-col items-center">
-                    {animal.fotos && animal.fotos.length > 0 ? (
-                      <img
-                        src={animal.fotos[0].ruta}
-                        alt={animal.nombre}
-                        className="w-32 h-32 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
-                        onClick={() => handleVerAnimal(animal)}
-                      />
-                    ) : (
-                      <div className="w-32 h-32 rounded-lg bg-gray-200 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity">
-                        <PawPrint className="h-8 w-8 text-gray-400" />
+                    <div className="relative group">
+                      {animal.fotos && animal.fotos.length > 0 ? (
+                        <img
+                          src={animal.fotos[0].ruta}
+                          alt={animal.nombre}
+                          className="w-32 h-32 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => handleVerAnimal(animal)}
+                        />
+                      ) : (
+                        <div className="w-32 h-32 rounded-lg bg-gray-200 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity">
+                          <PawPrint className="h-8 w-8 text-gray-400" />
+                        </div>
+                      )}
+                      {/* Overlay con icono al hacer hover */}
+                      <div className="absolute inset-0 bg-black/50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer" onClick={() => handleVerAnimal(animal)}>
+                        <ExternalLink className="h-6 w-6 text-white" />
                       </div>
-                    )}
+                    </div>
                   </div>
 
                   {/* Información */}
@@ -175,19 +181,28 @@ const ConsultarAdopcionesPage = () => {
                       </div>
                     </div>
 
-                    {/* Botón para subir foto */}
+                    {/* Botones de acción */}
                     <div className="pt-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleSubirFoto(animal)}
-                      >
-                        <Upload className="h-4 w-4 mr-2" />
-                        Subir Foto
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleVerAnimal(animal)}
+                        >
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          Ver Perfil
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleSubirFoto(animal)}
+                        >
+                          <Upload className="h-4 w-4 mr-2" />
+                          Subir Foto
+                        </Button>
+                      </div>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Agradeceríamos ver fotos de {animal.nombre}, pero no es
-                        un compromiso
+                        Agradeceríamos ver fotos de {animal.nombre}, pero no es un compromiso
                       </p>
                     </div>
                   </div>

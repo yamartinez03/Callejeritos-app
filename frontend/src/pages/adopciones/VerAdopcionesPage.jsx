@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, X } from "lucide-react";
+import { Search, X, AlertTriangle, PawPrint } from "lucide-react";
 
 const ANIMALES_ADOPTION_MOCK = [
   {
@@ -85,7 +85,7 @@ const VerAdopcionesPage = ({ onNavegar }) => {
     id: 1,
     tipo: "ADOPCION",
     nombre: "Formulario de Adopción",
-    ruta: "https://docs.google.com/forms/d/e/1FAIpQLSduzFJZg4xXXQN0_bRjH_LyElLOciNgVSY3Gla34kJwU_IZeQ/viewform?usp=publish_editor",
+    ruta: "https://docs.google.com/forms/d/e/1FAIpQLSe8faOJO_THW_SZ09D3p9FMmLHCvX7IW2HulaMr7HvSIh5MeA/viewform?usp=publish_editor",
     activo: true,
   });
 
@@ -311,7 +311,7 @@ const VerAdopcionesPage = ({ onNavegar }) => {
             className="mb-6 p-4 rounded-lg border flex items-center gap-3"
             style={{ backgroundColor: "#fef2f2", borderColor: "#fecaca" }}
           >
-            <span className="text-2xl">⚠️</span>
+            <AlertTriangle className="h-6 w-6 text-red-600" />
             <div>
               <p className="font-semibold" style={{ color: "#dc2626" }}>
                 Formulario de Adopción Inactivo

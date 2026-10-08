@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -52,6 +53,7 @@ const SOLICITUDES_MOCK = [
         },
       ],
     },
+    rutaFormularioAdmin: "https://docs.google.com/forms/d/164DkeOhf-gfe2YaalygF8xO1r7DTenVAY-KjfT98LdY/edit",
   },
   {
     idsolicituda: 2,
@@ -94,6 +96,7 @@ const SOLICITUDES_MOCK = [
         },
       ],
     },
+    rutaFormularioAdmin: "https://docs.google.com/forms/d/164DkeOhf-gfe2YaalygF8xO1r7DTenVAY-KjfT98LdY/edit",
   },
   {
     idsolicituda: 3,
@@ -127,6 +130,7 @@ const SOLICITUDES_MOCK = [
         "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop",
       historial: [],
     },
+    rutaFormularioAdmin: "https://docs.google.com/forms/d/164DkeOhf-gfe2YaalygF8xO1r7DTenVAY-KjfT98LdY/edit",
   },
   {
     idsolicituda: 4,
@@ -160,6 +164,7 @@ const SOLICITUDES_MOCK = [
         "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop",
       historial: [],
     },
+    rutaFormularioAdmin: "https://docs.google.com/forms/d/164DkeOhf-gfe2YaalygF8xO1r7DTenVAY-KjfT98LdY/edit",
   },
 ];
 
@@ -169,6 +174,7 @@ const ModerarAdopcionesPage = () => {
   const [busqueda, setBusqueda] = useState("");
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState(null);
   const [solicitudParaEntrega, setSolicitudParaEntrega] = useState(null);
+  const [fechaEntregaPersonalizada, setFechaEntregaPersonalizada] = useState("");
 
   const handleAprobar = (idsolicituda) => {
     setSolicitudes(
@@ -189,7 +195,11 @@ const ModerarAdopcionesPage = () => {
   };
 
   const handleVerFormulario = (solicitud) => {
-    alert("Ver respuestas del formulario (link del backend a implementar)");
+    if (solicitud.rutaFormularioAdmin) {
+      window.open(solicitud.rutaFormularioAdmin, "_blank");
+    } else {
+      alert("No hay URL de formulario de edición configurado");
+    }
   };
 
   const handleVerUsuario = (solicitante) => {
@@ -198,18 +208,20 @@ const ModerarAdopcionesPage = () => {
 
   const handleRegistrarEntrega = (solicitud) => {
     setSolicitudParaEntrega(solicitud);
+    setFechaEntregaPersonalizada(new Date().toISOString().split('T')[0]);
   };
 
   const handleConfirmarEntrega = () => {
     setSolicitudes(
       solicitudes.map((s) =>
         s.idsolicituda === solicitudParaEntrega.idsolicituda
-          ? { ...s, fechaEntrega: new Date().toISOString().split('T')[0] }
+          ? { ...s, fechaEntrega: fechaEntregaPersonalizada }
           : s,
       ),
     );
     alert("Fecha de entrega registrada");
     setSolicitudParaEntrega(null);
+    setFechaEntregaPersonalizada("");
   };
 
   const solicitudesFiltradas = solicitudes.filter((solicitud) => {
@@ -598,10 +610,24 @@ const ModerarAdopcionesPage = () => {
                 ¿Confirmas que el animal <strong>{solicitudParaEntrega.animal.nombre}</strong> ha sido entregado a {solicitudParaEntrega.solicitante.nombre}?
               </p>
 
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  Fecha de entrega
+                </label>
+                <Input
+                  type="date"
+                  value={fechaEntregaPersonalizada}
+                  onChange={(e) => setFechaEntregaPersonalizada(e.target.value)}
+                />
+              </div>
+
               <div className="flex gap-3 justify-end">
                 <Button
                   variant="outline"
-                  onClick={() => setSolicitudParaEntrega(null)}
+                  onClick={() => {
+                    setSolicitudParaEntrega(null);
+                    setFechaEntregaPersonalizada("");
+                  }}
                 >
                   Cancelar
                 </Button>

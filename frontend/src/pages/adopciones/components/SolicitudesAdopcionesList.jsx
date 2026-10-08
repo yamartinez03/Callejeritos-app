@@ -89,12 +89,31 @@ const SolicitudesAdopcionesList = () => {
   const [busqueda, setBusqueda] = useState("");
 
   const solicitudesFiltradas = solicitudes.filter((solicitud) => {
-    if (!busqueda) return true;
-    const busquedaLower = busqueda.toLowerCase();
-    return (
-      solicitud.animal.nombre?.toLowerCase().includes(busquedaLower) ||
-      solicitud.animal.especie?.toLowerCase().includes(busquedaLower)
-    );
+    // Solo mostrar solicitudes rechazadas, pendientes, o aprobadas sin entrega
+    if (solicitud.estado === "APROBADA" && solicitud.fechaEntrega) {
+      return false; // No mostrar aprobadas con entrega
+    }
+
+    // Para rechazadas, solo mostrar si tienen menos de un mes
+    if (solicitud.estado === "RECHAZADA") {
+      const fechaRechazo = new Date(solicitud.fecha);
+      const unMesAtras = new Date();
+      unMesAtras.setMonth(unMesAtras.getMonth() - 1);
+      if (fechaRechazo < unMesAtras) {
+        return false; // No mostrar rechazadas de más de un mes
+      }
+    }
+
+    // Filtro por búsqueda
+    if (busqueda) {
+      const busquedaLower = busqueda.toLowerCase();
+      return (
+        solicitud.animal.nombre?.toLowerCase().includes(busquedaLower) ||
+        solicitud.animal.especie?.toLowerCase().includes(busquedaLower)
+      );
+    }
+
+    return true;
   });
 
   const getEstadoConfig = (estado) => {
