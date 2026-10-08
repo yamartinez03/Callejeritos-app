@@ -176,12 +176,13 @@ model Archivo {
 }
 
 model ConfiguracionFormulario {
-  idconfig      Int     @id @default(autoincrement())
-  tipo          String  @db.VarChar(50) // "ADOPCION" o "TRANSITO"
-  rutaformulario String  @db.VarChar(255)
-  activo        Boolean @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  idconfig          Int     @id @default(autoincrement())
+  tipo              String  @db.VarChar(50) // "ADOPCION" o "TRANSITO"
+  rutaformulario    String  @db.VarChar(255) // URL del formulario público (para usuarios)
+  rutaformularioadmin String? @db.VarChar(255) // URL del formulario de edición (para admins)
+  activo            Boolean @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
  
   @@unique([tipo]) //No puede haber 2 rutas para adopción
   @@map("configuracionformulario")
