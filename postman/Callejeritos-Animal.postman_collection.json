@@ -1,0 +1,1579 @@
+{
+  "info": {
+    "_postman_id": "8f3c2a10-5d4e-4b7a-9c61-2e7d1b0a4f01",
+    "name": "Callejeritos - Módulo Animal",
+    "description": "Endpoints del módulo Animal.\n\n1. Cargar el seed: `node prisma/seed.js --reset`\n2. Importar esta colección y el environment \"Callejeritos - Local\"\n3. Ejecutar la carpeta \"00 - Setup\" y luego el resto en orden (o usar el Collection Runner).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "00 - Setup (ejecutar primero)",
+      "description": "",
+      "item": [
+        {
+          "name": "Obtener ids de los animales del seed",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const animales = pm.response.json().data;",
+                  "const id = (nombre) => { const a = animales.find((x) => x.nombre === nombre); return a ? String(a.idanimal) : ''; };",
+                  "pm.test('El seed está cargado (10 animales)', () => pm.expect(animales.length).to.be.at.least(10));",
+                  "pm.collectionVariables.set('animalConRelacionesId', id('Rocky'));   // tiene adopción + historial",
+                  "pm.collectionVariables.set('animalConHistorialId', id('Canela'));   // tiene historial con veterinaria",
+                  "pm.collectionVariables.set('animalSinRelacionesId', id('Firulais')); // se puede modificar/eliminar",
+                  "const perro = animales.find((x) => x.nombre === 'Rocky');",
+                  "const gato = animales.find((x) => x.nombre === 'Michi');",
+                  "pm.collectionVariables.set('idEspeciePerro', String(perro.idespecie));",
+                  "pm.collectionVariables.set('idEspecieGato', String(gato.idespecie));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales"
+              ]
+            },
+            "description": "Guarda en variables de la colección los ids de animales del seed que usan las demás requests."
+          }
+        },
+        {
+          "name": "Obtener id de una veterinaria del seed",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const registros = pm.response.json().data.flatMap((h) => h.registroatencionmedica);",
+                  "const vet = registros.find((r) => r.responsable.tipo === 'VETERINARIA');",
+                  "pm.test('Hay una veterinaria en el historial', () => pm.expect(vet).to.exist);",
+                  "pm.collectionVariables.set('veterinariaId', String(vet.responsable.idresponsable));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales/{{animalConHistorialId}}/historial-clinico",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales",
+                "{{animalConHistorialId}}",
+                "historial-clinico"
+              ]
+            },
+            "description": "Toma el id de la veterinaria que atendió a Canela, para probar el filtro por veterinaria."
+          }
+        }
+      ]
+    },
+    {
+      "name": "01 - Alta animal (GCA_02 / CT01)",
+      "description": "",
+      "item": [
+        {
+          "name": "Alta OK (estado inicial AVISTADO)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const animal = pm.response.json().data;",
+                  "pm.test('Se asignó estado inicial AVISTADO', () => pm.expect(animal.estado).to.eql('AVISTADO'));",
+                  "pm.test('Incluye la especie', () => pm.expect(animal.especieanimal.nombre).to.eql('Perro'));",
+                  "pm.collectionVariables.set('animalId', String(animal.idanimal));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales"
+              ]
+            },
+            "description": "Sin \"estado\" ni \"lactante\" el animal queda AVISTADO y no lactante.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idespecie\": {{idEspeciePerro}},\n  \"nombre\": \"Bruno\",\n  \"sexo\": \"MACHO\",\n  \"edadestimada\": 14,\n  \"colorpelaje\": \"Marrón oscuro\",\n  \"peso\": 9.8,\n  \"castrado\": false,\n  \"lugarorigen\": \"Calle 5 y 60\",\n  \"fechaingreso\": \"2026-10-25\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Alta OK con estado y lactante explícitos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const animal = pm.response.json().data;",
+                  "pm.test('Estado RESCATADO y lactante true', () => { pm.expect(animal.estado).to.eql('RESCATADO'); pm.expect(animal.lactante).to.eql(true); });",
+                  "pm.collectionVariables.set('animalGatoCreadoId', String(animal.idanimal));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idespecie\": {{idEspecieGato}},\n  \"nombre\": \"Misha\",\n  \"sexo\": \"HEMBRA\",\n  \"edadestimada\": 14,\n  \"colorpelaje\": \"Gris\",\n  \"peso\": 2.5,\n  \"castrado\": false,\n  \"lugarorigen\": \"Plaza San Martín\",\n  \"fechaingreso\": \"2026-10-25\",\n  \"estado\": \"RESCATADO\",\n  \"lactante\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Alta con datos incompletos / inválidos (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "const campos = pm.response.json().campos;",
+                  "pm.test('Marca los campos con error', () => ['nombre', 'sexo', 'edadestimada', 'colorpelaje', 'peso', 'castrado', 'lugarorigen', 'fechaingreso'].forEach((c) => pm.expect(campos).to.have.property(c)));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales"
+              ]
+            },
+            "description": "CC03: devuelve \"campos\" con el error de cada campo para marcarlo en el formulario.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idespecie\": 1,\n  \"nombre\": \"\",\n  \"sexo\": \"X\",\n  \"edadestimada\": -3,\n  \"peso\": \"pesado\",\n  \"castrado\": \"si\",\n  \"fechaingreso\": \"01/10/2026\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Alta con especie inexistente (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Error en idespecie', () => pm.expect(pm.response.json().campos).to.have.property('idespecie'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idespecie\": 99999,\n  \"nombre\": \"Bruno\",\n  \"sexo\": \"MACHO\",\n  \"edadestimada\": 14,\n  \"colorpelaje\": \"Marrón oscuro\",\n  \"peso\": 9.8,\n  \"castrado\": false,\n  \"lugarorigen\": \"Calle 5 y 60\",\n  \"fechaingreso\": \"2026-10-25\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Buscar animal (GCA_05 / CT07 / CC05)",
+      "description": "",
+      "item": [
+        {
+          "name": "Sin filtros (todos)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const r = pm.response.json();",
+                  "const nombres = r.data.map((a) => a.nombre);",
+                  "pm.test('Incluye a Firulais', () => pm.expect(nombres).to.include('Firulais'));",
+                  "pm.test('Incluye a Rocky', () => pm.expect(nombres).to.include('Rocky'));",
+                  "pm.test('Incluye a Luna', () => pm.expect(nombres).to.include('Luna'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Por especie (perros)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const r = pm.response.json();",
+                  "const nombres = r.data.map((a) => a.nombre);",
+                  "pm.test('Incluye a Rocky', () => pm.expect(nombres).to.include('Rocky'));",
+                  "pm.test('Incluye a Canela', () => pm.expect(nombres).to.include('Canela'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales?especie={{idEspeciePerro}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales"
+              ],
+              "query": [
+                {
+                  "key": "especie",
+                  "value": "{{idEspeciePerro}}"
+                }
+              ]
+            },
+            "description": "Ningún resultado debe ser gato."
+          }
+        },
+        {
+          "name": "Por sexo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const r = pm.response.json();",
+                  "const nombres = r.data.map((a) => a.nombre);",
+                  "pm.test('Incluye a Luna', () => pm.expect(nombres).to.include('Luna'));",
+                  "pm.test('Incluye a Canela', () => pm.expect(nombres).to.include('Canela'));",
+                  "pm.test('Incluye a Pelusa', () => pm.expect(nombres).to.include('Pelusa'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales?sexo=HEMBRA",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales"
+              ],
+              "query": [
+                {
+                  "key": "sexo",
+                  "value": "HEMBRA"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Por edad (36 meses)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const r = pm.response.json();",
+                  "const nombres = r.data.map((a) => a.nombre);",
+                  "pm.test('Incluye a Rocky', () => pm.expect(nombres).to.include('Rocky'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales?edad=36",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales"
+              ],
+              "query": [
+                {
+                  "key": "edad",
+                  "value": "36"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Por color (parcial, sin distinguir mayúsculas)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const r = pm.response.json();",
+                  "const nombres = r.data.map((a) => a.nombre);",
+                  "pm.test('Incluye a Firulais', () => pm.expect(nombres).to.include('Firulais'));",
+                  "pm.test('Incluye a Canela', () => pm.expect(nombres).to.include('Canela'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales?color=marr",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales"
+              ],
+              "query": [
+                {
+                  "key": "color",
+                  "value": "marr"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Por estado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const r = pm.response.json();",
+                  "const nombres = r.data.map((a) => a.nombre);",
+                  "pm.test('Incluye a Canela', () => pm.expect(nombres).to.include('Canela'));",
+                  "pm.test('Incluye a Pelusa', () => pm.expect(nombres).to.include('Pelusa'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales?estado=EN_ADOPCION",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "EN_ADOPCION"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Por lugar de rescate",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const r = pm.response.json();",
+                  "const nombres = r.data.map((a) => a.nombre);",
+                  "pm.test('Incluye a Firulais', () => pm.expect(nombres).to.include('Firulais'));",
+                  "pm.test('Incluye a Pelusa', () => pm.expect(nombres).to.include('Pelusa'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales?lugarRescate=plaza",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales"
+              ],
+              "query": [
+                {
+                  "key": "lugarRescate",
+                  "value": "plaza"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Por veterinaria (id)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const r = pm.response.json();",
+                  "const nombres = r.data.map((a) => a.nombre);",
+                  "pm.test('Incluye a Canela', () => pm.expect(nombres).to.include('Canela'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales?veterinaria={{veterinariaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales"
+              ],
+              "query": [
+                {
+                  "key": "veterinaria",
+                  "value": "{{veterinariaId}}"
+                }
+              ]
+            },
+            "description": "Animales atendidos por la veterinaria indicada."
+          }
+        },
+        {
+          "name": "Por transitante (nombre)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const r = pm.response.json();",
+                  "const nombres = r.data.map((a) => a.nombre);",
+                  "pm.test('Incluye a Michi', () => pm.expect(nombres).to.include('Michi'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales?transitanteAdoptante=gómez",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales"
+              ],
+              "query": [
+                {
+                  "key": "transitanteAdoptante",
+                  "value": "gómez"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Por adoptante (nombre)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const r = pm.response.json();",
+                  "const nombres = r.data.map((a) => a.nombre);",
+                  "pm.test('Incluye a Rocky', () => pm.expect(nombres).to.include('Rocky'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales?transitanteAdoptante=rodríguez",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales"
+              ],
+              "query": [
+                {
+                  "key": "transitanteAdoptante",
+                  "value": "rodríguez"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Filtros combinados (AND)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const r = pm.response.json();",
+                  "pm.test('Solo Nina cumple los 3 filtros', () => pm.expect(r.data.map((a) => a.nombre)).to.eql(['Nina']));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales?especie={{idEspecieGato}}&sexo=HEMBRA&estado=EN_TRANSITO",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales"
+              ],
+              "query": [
+                {
+                  "key": "especie",
+                  "value": "{{idEspecieGato}}"
+                },
+                {
+                  "key": "sexo",
+                  "value": "HEMBRA"
+                },
+                {
+                  "key": "estado",
+                  "value": "EN_TRANSITO"
+                }
+              ]
+            },
+            "description": "CC05: solo devuelve registros que cumplen TODOS los filtros."
+          }
+        },
+        {
+          "name": "Filtros excluyentes: lista vacía con mensaje",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const r = pm.response.json();",
+                  "pm.test('Lista vacía', () => pm.expect(r.data).to.eql([]));",
+                  "pm.test('Mensaje informativo', () => pm.expect(r.mensaje).to.be.a('string'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales?especie={{idEspecieGato}}&estado=ADOPTADO",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales"
+              ],
+              "query": [
+                {
+                  "key": "especie",
+                  "value": "{{idEspecieGato}}"
+                },
+                {
+                  "key": "estado",
+                  "value": "ADOPTADO"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Filtro inválido (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Marca los filtros erróneos', () => { const c = pm.response.json().campos; pm.expect(c).to.have.property('sexo'); pm.expect(c).to.have.property('especie'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales?sexo=otro&especie=abc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales"
+              ],
+              "query": [
+                {
+                  "key": "sexo",
+                  "value": "otro"
+                },
+                {
+                  "key": "especie",
+                  "value": "abc"
+                }
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Consultar animal (GCA_06)",
+      "description": "",
+      "item": [
+        {
+          "name": "Consultar animal existente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const a = pm.response.json().data;",
+                  "pm.test('Devuelve todos los datos', () => ['nombre', 'sexo', 'edadestimada', 'colorpelaje', 'peso', 'castrado', 'lugarorigen', 'estado', 'fechaingreso', 'lactante', 'especieanimal'].forEach((c) => pm.expect(a).to.have.property(c)));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales/{{animalConRelacionesId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales",
+                "{{animalConRelacionesId}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Consultar animal inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales",
+                "999999"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Consultar con id inválido (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales/abc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales",
+                "abc"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Modificar animal (GCA_03)",
+      "description": "",
+      "item": [
+        {
+          "name": "Modificar varios datos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const a = pm.response.json().data;",
+                  "pm.test('Datos actualizados', () => { pm.expect(a.nombre).to.eql('Bruno II'); pm.expect(a.peso).to.eql(10.4); pm.expect(a.castrado).to.eql(true); });",
+                  "pm.test('El estado no cambió', () => pm.expect(a.estado).to.eql('AVISTADO'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales/{{animalId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales",
+                "{{animalId}}"
+              ]
+            },
+            "description": "Usa el animal creado en la carpeta 01. Solo se validan y actualizan los campos enviados.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Bruno II\",\n  \"peso\": 10.4,\n  \"castrado\": true,\n  \"colorpelaje\": \"Marrón y blanco\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Modificar un solo campo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Lugar actualizado', () => pm.expect(pm.response.json().data.lugarorigen).to.eql('Calle 10 y 55'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales/{{animalId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales",
+                "{{animalId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lugarorigen\": \"Calle 10 y 55\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Campo vacío (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Campo obligatorio', () => pm.expect(pm.response.json().campos.nombre).to.eql('Campo obligatorio'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales/{{animalId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales",
+                "{{animalId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"   \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Dato con formato inválido (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Marca los campos', () => { const c = pm.response.json().campos; pm.expect(c).to.have.property('edadestimada'); pm.expect(c).to.have.property('fechaingreso'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales/{{animalId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales",
+                "{{animalId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"edadestimada\": \"dos\",\n  \"fechaingreso\": \"ayer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Sin datos para modificar (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales/{{animalId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales",
+                "{{animalId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Animal inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales",
+                "999999"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"peso\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - Cambio de estado (CT02)",
+      "description": "",
+      "item": [
+        {
+          "name": "AVISTADO → RESCATADO",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Estado vigente actualizado', () => pm.expect(pm.response.json().data.estado).to.eql('RESCATADO'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales/{{animalId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales",
+                "{{animalId}}",
+                "estado"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"RESCATADO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "RESCATADO → EN_TRANSITO (acepta minúsculas)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Estado EN_TRANSITO', () => pm.expect(pm.response.json().data.estado).to.eql('EN_TRANSITO'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales/{{animalId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales",
+                "{{animalId}}",
+                "estado"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"en_transito\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Verificar que el perfil refleja el estado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Perfil con estado EN_TRANSITO', () => pm.expect(pm.response.json().data.estado).to.eql('EN_TRANSITO'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales/{{animalId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales",
+                "{{animalId}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Estado inválido (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Lista los valores permitidos', () => pm.expect(pm.response.json().campos.estado).to.include('AVISTADO'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales/{{animalId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales",
+                "{{animalId}}",
+                "estado"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"VOLADOR\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Sin estado (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales/{{animalId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales",
+                "{{animalId}}",
+                "estado"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - Baja animal (GCA_04 / CC11)",
+      "description": "",
+      "item": [
+        {
+          "name": "Baja con registros relacionados (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "const r = pm.response.json();",
+                  "pm.test('Informa los registros relacionados', () => { pm.expect(r.relacionados).to.have.property('adopciones'); pm.expect(r.relacionados).to.have.property('historialClinico'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales/{{animalConRelacionesId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales",
+                "{{animalConRelacionesId}}"
+              ]
+            },
+            "description": "Rocky tiene adopción e historial clínico: informa los registros relacionados y no elimina."
+          }
+        },
+        {
+          "name": "Baja OK (animal creado en esta colección)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales/{{animalId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales",
+                "{{animalId}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Baja OK del segundo animal creado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales/{{animalGatoCreadoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales",
+                "{{animalGatoCreadoId}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Consultar animal dado de baja (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales/{{animalId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales",
+                "{{animalId}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Baja de animal inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/animales/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "animales",
+                "999999"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "animalConRelacionesId",
+      "value": ""
+    },
+    {
+      "key": "animalConHistorialId",
+      "value": ""
+    },
+    {
+      "key": "animalSinRelacionesId",
+      "value": ""
+    },
+    {
+      "key": "idEspeciePerro",
+      "value": ""
+    },
+    {
+      "key": "idEspecieGato",
+      "value": ""
+    },
+    {
+      "key": "veterinariaId",
+      "value": ""
+    },
+    {
+      "key": "animalId",
+      "value": ""
+    },
+    {
+      "key": "animalGatoCreadoId",
+      "value": ""
+    }
+  ]
+}
