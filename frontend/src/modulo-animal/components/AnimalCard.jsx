@@ -134,7 +134,6 @@ export default function AnimalCard({ animal, onEliminado }) {
           </div>
           <Link to={`/animales/${animal.idanimal}`}>
             <Button
-              asChild
               size="sm"
               variant="outline"
               className="shrink-0 gap-1"
