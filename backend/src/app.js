@@ -4,12 +4,15 @@ const cors = require('cors');
 
 const AppError = require('./lib/AppError');
 const animalRoutes = require('./routes/animalRoutes');
+const historialClinicoRoutes = require('./routes/historialClinicoRoutes');
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
+// Módulo historial clínico (cuelga de un animal)
+app.use('/api/animales/:idanimal/historial-clinico', historialClinicoRoutes);
 // Módulo animal
 app.use('/api/animales', animalRoutes);
 
@@ -18,7 +21,7 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Ruta no encontrada' });
 });
 
-// Manejo centralizado de errores
+// Manejo centralizado de errores (CC10): mensaje amigable, el detalle va al log
 app.use((err, req, res, next) => {
   if (err instanceof AppError) {
     return res.status(err.status).json({ error: err.message, ...err.extra });
