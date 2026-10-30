@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "8f3c2a10-5d4e-4b7a-9c61-2e7d1b0a4f01",
     "name": "Callejeritos - Módulo Animal",
-    "description": "Endpoints del módulo Animal.\n\n1. Cargar el seed: `node prisma/seed.js --reset`\n2. Importar esta colección y el environment \"Callejeritos - Local\"\n3. Ejecutar la carpeta \"00 - Setup\" y luego el resto en orden (o usar el Collection Runner).",
+    "description": "Endpoints del módulo Animal, Especies e Historial clínico.\n\n1. Cargar el seed: `node prisma/seed.js --reset`\n2. Importar esta colección y el environment \"Callejeritos - Local\"\n3. Ejecutar la carpeta \"00 - Setup\" y luego el resto en orden (o usar el Collection Runner).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -50,7 +50,7 @@
           }
         },
         {
-          "name": "Obtener id de una veterinaria del seed",
+          "name": "Obtener ids del historial del seed (veterinaria, profesional, vacuna)",
           "event": [
             {
               "listen": "test",
@@ -61,7 +61,14 @@
                   "const registros = pm.response.json().data.flatMap((h) => h.registroatencionmedica);",
                   "const vet = registros.find((r) => r.responsable.tipo === 'VETERINARIA');",
                   "pm.test('Hay una veterinaria en el historial', () => pm.expect(vet).to.exist);",
-                  "pm.collectionVariables.set('veterinariaId', String(vet.responsable.idresponsable));"
+                  "pm.collectionVariables.set('veterinariaId', String(vet.responsable.idresponsable));",
+                  "const prof = registros.find((r) => r.responsable.tipo === 'PROFESIONAL');",
+                  "pm.test('Hay un profesional en el historial', () => pm.expect(prof).to.exist);",
+                  "pm.collectionVariables.set('profesionalId', String(prof.responsable.idresponsable));",
+                  "const vacuna = registros.find((r) => r.tipo === 'VACUNA');",
+                  "pm.test('Hay una vacuna aplicada', () => pm.expect(vacuna).to.exist);",
+                  "pm.collectionVariables.set('idvacuna', String(vacuna.registrovacuna.idvacuna));",
+                  "pm.collectionVariables.set('registroAjenoId', String(registros[0].idregistro)); // pertenece a Canela, no al animal de prueba"
                 ]
               }
             }
@@ -1540,6 +1547,4207 @@
           }
         }
       ]
+    },
+    {
+      "name": "07 - Especies (CRUD)",
+      "description": "",
+      "item": [
+        {
+          "name": "Alta de especie OK",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const e = pm.response.json().data;",
+                  "pm.test('Nombre guardado sin espacios sobrantes', () => pm.expect(e.nombre).to.eql('Conejo'));",
+                  "pm.test('Nueva especie sin animales', () => pm.expect(e.cantidadAnimales).to.eql(0));",
+                  "pm.collectionVariables.set('especieId', String(e.idespecie));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/especies",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "especies"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"  Conejo  \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Alta con nombre repetido, sin distinguir mayúsculas (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Marca el campo nombre', () => pm.expect(pm.response.json().campos).to.have.property('nombre'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/especies",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "especies"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"cOnEjO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Alta sin nombre (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Campo obligatorio', () => pm.expect(pm.response.json().campos.nombre).to.eql('Campo obligatorio'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/especies",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "especies"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"   \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Alta con nombre demasiado largo (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('Marca el campo nombre', () => pm.expect(pm.response.json().campos).to.have.property('nombre'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/especies",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "especies"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Consultar especies",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const r = pm.response.json();",
+                  "const nombres = r.data.map((e) => e.nombre);",
+                  "pm.test('Incluye la especie creada y las del seed', () => { pm.expect(nombres).to.include('Conejo'); pm.expect(nombres).to.include('Perro'); });",
+                  "pm.test('Ordenadas alfabéticamente', () => { const orden = [...nombres].sort((a, b) => a.localeCompare(b, 'es')); pm.expect(nombres).to.eql(orden); });",
+                  "pm.test('Informa la cantidad de animales', () => { const perro = r.data.find((e) => e.nombre === 'Perro'); pm.expect(perro.cantidadAnimales).to.be.above(0); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/especies",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "especies"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Consultar una especie",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Es Conejo', () => pm.expect(pm.response.json().data.nombre).to.eql('Conejo'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/especies/{{especieId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "especies",
+                "{{especieId}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Consultar especie inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/especies/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "especies",
+                "999999"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Consultar con id inválido (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/especies/abc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "especies",
+                "abc"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Modificar especie OK",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Nombre actualizado', () => pm.expect(pm.response.json().data.nombre).to.eql('Conejo enano'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/especies/{{especieId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "especies",
+                "{{especieId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Conejo enano\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Modificar conservando el mismo nombre (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/especies/{{especieId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "especies",
+                "{{especieId}}"
+              ]
+            },
+            "description": "No debe chocar consigo misma al validar nombre repetido.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"conejo ENANO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Modificar con nombre de otra especie (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Marca el campo nombre', () => pm.expect(pm.response.json().campos).to.have.property('nombre'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/especies/{{especieId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "especies",
+                "{{especieId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"perro\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Modificar con nombre vacío (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/especies/{{especieId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "especies",
+                "{{especieId}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Modificar especie inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/especies/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "especies",
+                "999999"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Loro\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Eliminar especie en uso (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Informa los animales que la usan', () => pm.expect(pm.response.json().relacionados.animales).to.be.above(0));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/especies/{{idEspeciePerro}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "especies",
+                "{{idEspeciePerro}}"
+              ]
+            },
+            "description": "Perro tiene animales asociados: informa cuántos y no elimina."
+          }
+        },
+        {
+          "name": "Eliminar especie sin uso OK",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/especies/{{especieId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "especies",
+                "{{especieId}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Eliminar de nuevo (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/especies/{{especieId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "especies",
+                "{{especieId}}"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 - Historial clínico (GH_02..GH_08 / CT03)",
+      "description": "Ejecutar en orden: cada subcarpeta usa datos creados por las anteriores. Requiere el seed (carpeta 00 - Setup).",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const f = (dias) => { const d = new Date(); d.setUTCDate(d.getUTCDate() + dias); return d.toISOString().slice(0, 10); };",
+              "pm.collectionVariables.set('fechaHoy', f(0));",
+              "pm.collectionVariables.set('fechaFutura', f(90));",
+              "pm.collectionVariables.set('fechaFutura2', f(120));",
+              "pm.collectionVariables.set('fechaVencida', f(-30));",
+              "pm.collectionVariables.set('fechaAplicVieja', f(-120));",
+              "pm.collectionVariables.set('fechaVacAplic', f(-10));",
+              "pm.collectionVariables.set('fechaVacVenc', f(355));"
+            ]
+          }
+        }
+      ],
+      "item": [
+        {
+          "name": "08.0 - Preparación",
+          "description": "Crea los animales sobre los que se escribe en el resto de la carpeta.",
+          "item": [
+            {
+              "name": "Crear animal con historial (animal de prueba A)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                      "pm.collectionVariables.set('animalHistId', String(pm.response.json().data.idanimal));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"idespecie\": {{idEspeciePerro}},\n  \"nombre\": \"Test Historial A\",\n  \"sexo\": \"MACHO\",\n  \"edadestimada\": 3,\n  \"colorpelaje\": \"Gris\",\n  \"peso\": 12,\n  \"castrado\": true,\n  \"lugarorigen\": \"Prueba Postman\",\n  \"fechaingreso\": \"2026-10-01\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Crear animal sin historial (animal de prueba B)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                      "pm.collectionVariables.set('animalVacioId', String(pm.response.json().data.idanimal));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"idespecie\": {{idEspeciePerro}},\n  \"nombre\": \"Test Historial B\",\n  \"sexo\": \"MACHO\",\n  \"edadestimada\": 3,\n  \"colorpelaje\": \"Gris\",\n  \"peso\": 12,\n  \"castrado\": true,\n  \"lugarorigen\": \"Prueba Postman\",\n  \"fechaingreso\": \"2026-10-01\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "08.1 - Consultar historial (GH_07 / CT03)",
+          "description": "",
+          "item": [
+            {
+              "name": "Historial vacío: 200 con mensaje informativo",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                      "const r = pm.response.json();",
+                      "pm.test('Lista vacía y total 0', () => { pm.expect(r.total).to.eql(0); pm.expect(r.data).to.eql([]); });",
+                      "pm.test('Mensaje informativo', () => pm.expect(r.mensaje).to.be.a('string'));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalVacioId}}/historial-clinico",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalVacioId}}",
+                    "historial-clinico"
+                  ]
+                },
+                "description": ""
+              }
+            },
+            {
+              "name": "Historial del seed: vacuna, desparasitación y estudio con su responsable",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                      "const r = pm.response.json();",
+                      "const registros = r.data.flatMap((h) => h.registroatencionmedica);",
+                      "pm.test('Tiene al menos 3 entradas', () => pm.expect(r.total).to.be.at.least(3));",
+                      "pm.test('Incluye los tres tipos', () => pm.expect(registros.map((x) => x.tipo)).to.include.members(['VACUNA', 'DESPARASITACION', 'ESTUDIO']));",
+                      "pm.test('Cada registro informa la veterinaria o profesional', () => registros.forEach((x) => { ['idresponsable', 'nombre', 'tipo', 'telefono', 'email'].forEach((c) => pm.expect(x.responsable).to.have.property(c)); }));",
+                      "pm.test('La vacuna trae el nombre de la vacuna', () => pm.expect(registros.find((x) => x.tipo === 'VACUNA').registrovacuna.vacuna.nombre).to.be.a('string'));",
+                      "pm.test('La desparasitación trae el producto', () => pm.expect(registros.find((x) => x.tipo === 'DESPARASITACION').registrodesparasitacion.producto).to.be.a('string'));",
+                      "pm.test('El estudio trae su archivo', () => pm.expect(registros.find((x) => x.tipo === 'ESTUDIO').registroestudio.archivo).to.match(/\\.(pdf|csv|png|jpe?g)$/i));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalConHistorialId}}/historial-clinico",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalConHistorialId}}",
+                    "historial-clinico"
+                  ]
+                },
+                "description": "Canela (seed) tiene una vacuna, una desparasitación y un estudio."
+              }
+            },
+            {
+              "name": "Orden cronológico ascendente (CT03)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                      "const fechas = pm.response.json().data.map((h) => new Date(h.fecha).getTime());",
+                      "pm.test('Las entradas están ordenadas por fecha', () => pm.expect(fechas).to.eql([...fechas].sort((a, b) => a - b)));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalConHistorialId}}/historial-clinico",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalConHistorialId}}",
+                    "historial-clinico"
+                  ]
+                },
+                "description": ""
+              }
+            },
+            {
+              "name": "Animal inexistente (404)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/999999/historial-clinico",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "999999",
+                    "historial-clinico"
+                  ]
+                },
+                "description": ""
+              }
+            },
+            {
+              "name": "Id inválido (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/abc/historial-clinico",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "abc",
+                    "historial-clinico"
+                  ]
+                },
+                "description": ""
+              }
+            },
+            {
+              "name": "Id fuera del rango de enteros (400, no 500)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/99999999999/historial-clinico",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "99999999999",
+                    "historial-clinico"
+                  ]
+                },
+                "description": ""
+              }
+            }
+          ]
+        },
+        {
+          "name": "08.2 - Registrar atención veterinaria (GH_02)",
+          "description": "",
+          "item": [
+            {
+              "name": "Atención OK (se recortan los espacios)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                      "const a = pm.response.json().data;",
+                      "pm.test('Descripción sin espacios sobrantes', () => pm.expect(a.descripcion).to.eql('Control general, buen estado'));",
+                      "pm.test('Pertenece al animal de prueba', () => pm.expect(a.idanimal).to.eql(Number(pm.collectionVariables.get('animalHistId'))));",
+                      "pm.collectionVariables.set('atencionId', String(a.idhistorial));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/atenciones",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "atenciones"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"fecha\": \"2026-10-05\",\n  \"descripcion\": \"  Control general, buen estado  \"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Sin descripción (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('descripcion: Campo obligatorio', () => pm.expect(pm.response.json().campos.descripcion).to.include('Campo obligatorio'));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/atenciones",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "atenciones"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"fecha\": \"2026-10-05\",\n  \"descripcion\": \"   \"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Sin ningún dato (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('Marca los campos: fecha, descripcion', () => { const c = pm.response.json().campos; [\"fecha\",\"descripcion\"].forEach((k) => pm.expect(c).to.have.property(k)); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/atenciones",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "atenciones"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Fecha con formato inválido (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('fecha: Formato de fecha inválido', () => pm.expect(pm.response.json().campos.fecha).to.include('Formato de fecha inválido'));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/atenciones",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "atenciones"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"fecha\": \"05/10/2026\",\n  \"descripcion\": \"x\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Descripción de más de 500 caracteres (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('descripcion: 500', () => pm.expect(pm.response.json().campos.descripcion).to.include('500'));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/atenciones",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "atenciones"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"fecha\": \"2026-10-05\",\n  \"descripcion\": \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Animal inexistente (404)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/999999/historial-clinico/atenciones",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "999999",
+                    "historial-clinico",
+                    "atenciones"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"fecha\": \"2026-10-05\",\n  \"descripcion\": \"x\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Aparece en la consulta como entrada sin registros médicos",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                      "const entrada = pm.response.json().data.find((h) => h.idhistorial === Number(pm.collectionVariables.get('atencionId')));",
+                      "pm.test('La entrada existe', () => pm.expect(entrada).to.exist);",
+                      "pm.test('No tiene registros médicos asociados', () => pm.expect(entrada.registroatencionmedica).to.eql([]));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico"
+                  ]
+                },
+                "description": ""
+              }
+            }
+          ]
+        },
+        {
+          "name": "08.3 - Registrar vacunación (GH_05)",
+          "description": "",
+          "item": [
+            {
+              "name": "Vacunación OK",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                      "const r = pm.response.json().data;",
+                      "pm.test('Es una VACUNA con el nombre de la vacuna', () => { pm.expect(r.tipo).to.eql('VACUNA'); pm.expect(r.registrovacuna.vacuna.nombre).to.be.a('string'); });",
+                      "pm.test('Informa la veterinaria que la aplicó', () => pm.expect(r.responsable.tipo).to.eql('VETERINARIA'));",
+                      "pm.test('Se creó su propia entrada de historial', () => { pm.expect(r.idhistorial).to.be.a('number'); pm.expect(r.idhistorial).to.not.eql(Number(pm.collectionVariables.get('atencionId'))); });",
+                      "pm.collectionVariables.set('registroVacunaId', String(r.idregistro));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/vacunas",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "vacunas"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"idresponsable\": {{veterinariaId}},\n  \"idvacuna\": {{idvacuna}},\n  \"fechaaplicacion\": \"{{fechaVacAplic}}\",\n  \"fechavencimiento\": \"{{fechaVacVenc}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Contar entradas antes del lote",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                      "pm.collectionVariables.set('totalEntradas', String(pm.response.json().total));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico"
+                  ]
+                },
+                "description": ""
+              }
+            },
+            {
+              "name": "Lote de 2 vacunaciones (\"Otra vacunación\") OK",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                      "const r = pm.response.json().data;",
+                      "pm.test('Devuelve las 2 vacunaciones', () => { pm.expect(r).to.be.an('array').with.lengthOf(2); r.forEach((x) => pm.expect(x.tipo).to.eql('VACUNA')); });",
+                      "pm.collectionVariables.set('totalEntradas', String(Number(pm.collectionVariables.get('totalEntradas')) + 2));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/vacunas",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "vacunas"
+                  ]
+                },
+                "description": "Un array permite registrar varias vacunaciones en una sola operación.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "[\n  {\n    \"idresponsable\": {{veterinariaId}},\n    \"idvacuna\": {{idvacuna}},\n    \"fechaaplicacion\": \"{{fechaVacAplic}}\",\n    \"fechavencimiento\": \"{{fechaVacVenc}}\"\n  },\n  {\n    \"idresponsable\": {{profesionalId}},\n    \"idvacuna\": {{idvacuna}},\n    \"fechaaplicacion\": \"{{fechaHoy}}\",\n    \"fechavencimiento\": \"{{fechaVacVenc}}\"\n  }\n]",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Lote con una vacunación inválida: informa cuál (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('Indica que falló la 2.ª', () => pm.expect(pm.response.json().registro).to.eql(2));",
+                      "pm.test('Marca los campos: fechavencimiento', () => { const c = pm.response.json().campos; [\"fechavencimiento\"].forEach((k) => pm.expect(c).to.have.property(k)); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/vacunas",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "vacunas"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "[\n  {\n    \"idresponsable\": {{veterinariaId}},\n    \"idvacuna\": {{idvacuna}},\n    \"fechaaplicacion\": \"{{fechaVacAplic}}\",\n    \"fechavencimiento\": \"{{fechaVacVenc}}\"\n  },\n  {\n    \"idresponsable\": {{veterinariaId}},\n    \"idvacuna\": {{idvacuna}},\n    \"fechaaplicacion\": \"{{fechaVacAplic}}\",\n    \"fechavencimiento\": \"2020-01-01\"\n  }\n]",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "El lote inválido no guardó ninguna (atomicidad)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                      "pm.test('El total no cambió', () => pm.expect(pm.response.json().total).to.eql(Number(pm.collectionVariables.get('totalEntradas'))));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico"
+                  ]
+                },
+                "description": ""
+              }
+            },
+            {
+              "name": "Vencimiento anterior a la aplicación (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('fechavencimiento: posterior', () => pm.expect(pm.response.json().campos.fechavencimiento).to.include('posterior'));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/vacunas",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "vacunas"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"idresponsable\": {{veterinariaId}},\n  \"idvacuna\": {{idvacuna}},\n  \"fechaaplicacion\": \"{{fechaVacAplic}}\",\n  \"fechavencimiento\": \"2020-01-01\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Vencimiento igual a la aplicación (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('Marca los campos: fechavencimiento', () => { const c = pm.response.json().campos; [\"fechavencimiento\"].forEach((k) => pm.expect(c).to.have.property(k)); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/vacunas",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "vacunas"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"idresponsable\": {{veterinariaId}},\n  \"idvacuna\": {{idvacuna}},\n  \"fechaaplicacion\": \"{{fechaVacAplic}}\",\n  \"fechavencimiento\": \"{{fechaVacAplic}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Vacuna inexistente (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('idvacuna: no existe', () => pm.expect(pm.response.json().campos.idvacuna).to.include('no existe'));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/vacunas",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "vacunas"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"idresponsable\": {{veterinariaId}},\n  \"idvacuna\": 99999,\n  \"fechaaplicacion\": \"{{fechaVacAplic}}\",\n  \"fechavencimiento\": \"{{fechaVacVenc}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Veterinaria o profesional inexistente (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('idresponsable: no existe', () => pm.expect(pm.response.json().campos.idresponsable).to.include('no existe'));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/vacunas",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "vacunas"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"idresponsable\": 99999,\n  \"idvacuna\": {{idvacuna}},\n  \"fechaaplicacion\": \"{{fechaVacAplic}}\",\n  \"fechavencimiento\": \"{{fechaVacVenc}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Campos obligatorios faltantes (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('Marca los campos: idresponsable, idvacuna, fechaaplicacion, fechavencimiento', () => { const c = pm.response.json().campos; [\"idresponsable\",\"idvacuna\",\"fechaaplicacion\",\"fechavencimiento\"].forEach((k) => pm.expect(c).to.have.property(k)); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/vacunas",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "vacunas"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Formato de fecha inválido (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('fechaaplicacion: Formato de fecha inválido', () => pm.expect(pm.response.json().campos.fechaaplicacion).to.include('Formato de fecha inválido'));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/vacunas",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "vacunas"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"idresponsable\": {{veterinariaId}},\n  \"idvacuna\": {{idvacuna}},\n  \"fechaaplicacion\": \"ayer\",\n  \"fechavencimiento\": \"{{fechaVacVenc}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Lista vacía (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('Mensaje', () => pm.expect(pm.response.json().error).to.include('No se enviaron datos'));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/vacunas",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "vacunas"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "[]",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Colgar la vacuna de una entrada existente (idhistorial)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                      "pm.test('Quedó asociada a la atención', () => pm.expect(pm.response.json().data.idhistorial).to.eql(Number(pm.collectionVariables.get('atencionId'))));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/vacunas",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "vacunas"
+                  ]
+                },
+                "description": "Usa la atención creada en 08.2 como entrada del historial.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"idresponsable\": {{veterinariaId}},\n  \"idvacuna\": {{idvacuna}},\n  \"fechaaplicacion\": \"{{fechaVacAplic}}\",\n  \"fechavencimiento\": \"{{fechaVacVenc}}\",\n  \"idhistorial\": {{atencionId}}\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "idhistorial inexistente (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('Marca los campos: idhistorial', () => { const c = pm.response.json().campos; [\"idhistorial\"].forEach((k) => pm.expect(c).to.have.property(k)); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/vacunas",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "vacunas"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"idresponsable\": {{veterinariaId}},\n  \"idvacuna\": {{idvacuna}},\n  \"fechaaplicacion\": \"{{fechaVacAplic}}\",\n  \"fechavencimiento\": \"{{fechaVacVenc}}\",\n  \"idhistorial\": 999999\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "La atención ahora tiene la vacuna asociada",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                      "const entrada = pm.response.json().data.find((h) => h.idhistorial === Number(pm.collectionVariables.get('atencionId')));",
+                      "pm.test('La entrada tiene 1 registro de tipo VACUNA', () => { pm.expect(entrada.registroatencionmedica).to.have.lengthOf(1); pm.expect(entrada.registroatencionmedica[0].tipo).to.eql('VACUNA'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico"
+                  ]
+                },
+                "description": ""
+              }
+            },
+            {
+              "name": "Animal inexistente (404)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/999999/historial-clinico/vacunas",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "999999",
+                    "historial-clinico",
+                    "vacunas"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"idresponsable\": {{veterinariaId}},\n  \"idvacuna\": {{idvacuna}},\n  \"fechaaplicacion\": \"{{fechaVacAplic}}\",\n  \"fechavencimiento\": \"{{fechaVacVenc}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "08.4 - Registrar desparasitación (GH_06)",
+          "description": "",
+          "item": [
+            {
+              "name": "Desparasitación anterior ya vencida: OK",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                      "pm.test('Es una DESPARASITACION', () => pm.expect(pm.response.json().data.tipo).to.eql('DESPARASITACION'));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/desparasitaciones",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "desparasitaciones"
+                  ]
+                },
+                "description": "Una desparasitación cuya próxima aplicación ya pasó NO se considera vigente.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"idresponsable\": {{profesionalId}},\n  \"producto\": \"Drontal\",\n  \"dosis\": \"1 comprimido cada 10 kg\",\n  \"fechaaplicacion\": \"{{fechaAplicVieja}}\",\n  \"proximaaplicacion\": \"{{fechaVencida}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Desparasitación nueva (la anterior venció): OK",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                      "const r = pm.response.json().data;",
+                      "pm.test('Guarda producto, dosis y próxima aplicación', () => { pm.expect(r.registrodesparasitacion.producto).to.eql('Drontal'); pm.expect(r.registrodesparasitacion.dosis).to.be.a('string'); pm.expect(r.registrodesparasitacion.proximaaplicacion.slice(0, 10)).to.eql(pm.collectionVariables.get('fechaFutura')); });",
+                      "pm.test('Informa el profesional', () => pm.expect(r.responsable.tipo).to.eql('PROFESIONAL'));",
+                      "pm.collectionVariables.set('registroDespId', String(r.idregistro));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/desparasitaciones",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "desparasitaciones"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"idresponsable\": {{profesionalId}},\n  \"producto\": \"Drontal\",\n  \"dosis\": \"1 comprimido cada 10 kg\",\n  \"fechaaplicacion\": \"{{fechaHoy}}\",\n  \"proximaaplicacion\": \"{{fechaFutura}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Ya existe una desparasitación vigente (409)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                      "const r = pm.response.json();",
+                      "pm.test('Mensaje claro', () => pm.expect(r.error).to.include('desparasitación vigente'));",
+                      "pm.test('Informa hasta cuándo está vigente', () => pm.expect(r.proximaAplicacion.slice(0, 10)).to.eql(pm.collectionVariables.get('fechaFutura')));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/desparasitaciones",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "desparasitaciones"
+                  ]
+                },
+                "description": "Precondición de GH_06: no se puede registrar otra mientras haya una vigente.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"idresponsable\": {{profesionalId}},\n  \"producto\": \"Otro producto\",\n  \"dosis\": \"1 comprimido cada 10 kg\",\n  \"fechaaplicacion\": \"{{fechaHoy}}\",\n  \"proximaaplicacion\": \"{{fechaFutura}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Próxima aplicación anterior a la aplicación (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('proximaaplicacion: posterior', () => pm.expect(pm.response.json().campos.proximaaplicacion).to.include('posterior'));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/desparasitaciones",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "desparasitaciones"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"idresponsable\": {{profesionalId}},\n  \"producto\": \"Drontal\",\n  \"dosis\": \"1 comprimido cada 10 kg\",\n  \"fechaaplicacion\": \"{{fechaHoy}}\",\n  \"proximaaplicacion\": \"2020-01-01\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Más de una por vez (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('Mensaje', () => pm.expect(pm.response.json().error).to.include('una desparasitación por vez'));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/desparasitaciones",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "desparasitaciones"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "[\n  {\n    \"idresponsable\": {{profesionalId}},\n    \"producto\": \"Drontal\",\n    \"dosis\": \"1 comprimido cada 10 kg\",\n    \"fechaaplicacion\": \"{{fechaHoy}}\",\n    \"proximaaplicacion\": \"{{fechaFutura}}\"\n  },\n  {\n    \"idresponsable\": {{profesionalId}},\n    \"producto\": \"Drontal\",\n    \"dosis\": \"1 comprimido cada 10 kg\",\n    \"fechaaplicacion\": \"{{fechaHoy}}\",\n    \"proximaaplicacion\": \"{{fechaFutura}}\"\n  }\n]",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Campos obligatorios faltantes (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('Marca los campos: idresponsable, producto, dosis, fechaaplicacion, proximaaplicacion', () => { const c = pm.response.json().campos; [\"idresponsable\",\"producto\",\"dosis\",\"fechaaplicacion\",\"proximaaplicacion\"].forEach((k) => pm.expect(c).to.have.property(k)); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/desparasitaciones",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "desparasitaciones"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Producto de más de 150 caracteres (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('Marca los campos: producto', () => { const c = pm.response.json().campos; [\"producto\"].forEach((k) => pm.expect(c).to.have.property(k)); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/desparasitaciones",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "desparasitaciones"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"idresponsable\": {{profesionalId}},\n  \"producto\": \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\n  \"dosis\": \"1 comprimido cada 10 kg\",\n  \"fechaaplicacion\": \"{{fechaHoy}}\",\n  \"proximaaplicacion\": \"{{fechaFutura}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Veterinaria o profesional inexistente (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('Marca los campos: idresponsable', () => { const c = pm.response.json().campos; [\"idresponsable\"].forEach((k) => pm.expect(c).to.have.property(k)); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalVacioId}}/historial-clinico/desparasitaciones",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalVacioId}}",
+                    "historial-clinico",
+                    "desparasitaciones"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"idresponsable\": 99999,\n  \"producto\": \"Drontal\",\n  \"dosis\": \"1 comprimido cada 10 kg\",\n  \"fechaaplicacion\": \"{{fechaHoy}}\",\n  \"proximaaplicacion\": \"{{fechaFutura}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "08.5 - Registrar estudio (GH_03)",
+          "description": "",
+          "item": [
+            {
+              "name": "Estudio OK",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                      "const r = pm.response.json().data;",
+                      "pm.test('Guarda tipo, resultado y archivo', () => { pm.expect(r.tipo).to.eql('ESTUDIO'); pm.expect(r.registroestudio.tipo).to.eql('Hemograma'); pm.expect(r.registroestudio.archivo).to.eql('uploads/hemograma.pdf'); });",
+                      "pm.collectionVariables.set('registroEstudioId', String(r.idregistro));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/estudios",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "estudios"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"idresponsable\": {{veterinariaId}},\n  \"fecha\": \"2026-10-15\",\n  \"tipo\": \"Hemograma\",\n  \"resultado\": \"Valores dentro de los parámetros normales\",\n  \"archivo\": \"uploads/hemograma.pdf\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Lote de 2 estudios, extensiones en mayúsculas OK (\"Otro estudio\")",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                      "pm.test('Devuelve los 2 estudios', () => pm.expect(pm.response.json().data).to.be.an('array').with.lengthOf(2));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/estudios",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "estudios"
+                  ]
+                },
+                "description": "Las extensiones válidas son .pdf .csv .png .jpg .jpeg (sin distinguir mayúsculas).",
+                "body": {
+                  "mode": "raw",
+                  "raw": "[\n  {\n    \"idresponsable\": {{veterinariaId}},\n    \"fecha\": \"2026-10-15\",\n    \"tipo\": \"Hemograma\",\n    \"resultado\": \"Valores dentro de los parámetros normales\",\n    \"archivo\": \"datos.CSV\"\n  },\n  {\n    \"idresponsable\": {{veterinariaId}},\n    \"fecha\": \"2026-10-15\",\n    \"tipo\": \"Radiografía\",\n    \"resultado\": \"Valores dentro de los parámetros normales\",\n    \"archivo\": \"FOTO.JPEG\"\n  }\n]",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Extensión de archivo no permitida (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('archivo: Formato no permitido', () => pm.expect(pm.response.json().campos.archivo).to.include('Formato no permitido'));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/estudios",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "estudios"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"idresponsable\": {{veterinariaId}},\n  \"fecha\": \"2026-10-15\",\n  \"tipo\": \"Hemograma\",\n  \"resultado\": \"Valores dentro de los parámetros normales\",\n  \"archivo\": \"virus.exe\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Sin archivo (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('archivo: Campo obligatorio', () => pm.expect(pm.response.json().campos.archivo).to.include('Campo obligatorio'));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/estudios",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "estudios"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"idresponsable\": {{veterinariaId}},\n  \"fecha\": \"2026-10-15\",\n  \"tipo\": \"Hemograma\",\n  \"resultado\": \"Valores dentro de los parámetros normales\",\n  \"archivo\": null\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Resultado de más de 500 caracteres (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('Marca los campos: resultado', () => { const c = pm.response.json().campos; [\"resultado\"].forEach((k) => pm.expect(c).to.have.property(k)); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/estudios",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "estudios"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"idresponsable\": {{veterinariaId}},\n  \"fecha\": \"2026-10-15\",\n  \"tipo\": \"Hemograma\",\n  \"resultado\": \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\n  \"archivo\": \"uploads/hemograma.pdf\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Campos obligatorios faltantes (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('Marca los campos: idresponsable, fecha, tipo, resultado, archivo', () => { const c = pm.response.json().campos; [\"idresponsable\",\"fecha\",\"tipo\",\"resultado\",\"archivo\"].forEach((k) => pm.expect(c).to.have.property(k)); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/estudios",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "estudios"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Animal inexistente (404)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/999999/historial-clinico/estudios",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "999999",
+                    "historial-clinico",
+                    "estudios"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"idresponsable\": {{veterinariaId}},\n  \"fecha\": \"2026-10-15\",\n  \"tipo\": \"Hemograma\",\n  \"resultado\": \"Valores dentro de los parámetros normales\",\n  \"archivo\": \"uploads/hemograma.pdf\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "08.6 - Registrar tratamiento (GH_08)",
+          "description": "",
+          "item": [
+            {
+              "name": "Tratamiento OK",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                      "const r = pm.response.json().data;",
+                      "pm.test('Guarda descripción, fechas, medicación y archivo', () => { const t = r.registrotratamiento; pm.expect(r.tipo).to.eql('TRATAMIENTO'); pm.expect(t.descripcion).to.include('Antibiótico'); pm.expect(t.fechainicio.slice(0, 10)).to.eql('2026-10-16'); pm.expect(t.fechafin.slice(0, 10)).to.eql('2026-10-26'); pm.expect(t.medicacion).to.include('Amoxicilina'); pm.expect(t.archivo).to.eql('uploads/receta.jpg'); });",
+                      "pm.collectionVariables.set('registroTratamientoId', String(r.idregistro));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/tratamientos",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "tratamientos"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"idresponsable\": {{profesionalId}},\n  \"fecha\": \"2026-10-16\",\n  \"descripcion\": \"Antibiótico por infección de oído\",\n  \"fechainicio\": \"2026-10-16\",\n  \"fechafin\": \"2026-10-26\",\n  \"medicacion\": \"Amoxicilina 250 mg cada 12 hs\",\n  \"archivo\": \"uploads/receta.jpg\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Lote de 2 tratamientos (\"Otro tratamiento\") OK",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                      "pm.test('Devuelve los 2 tratamientos', () => pm.expect(pm.response.json().data).to.be.an('array').with.lengthOf(2));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/tratamientos",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "tratamientos"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "[\n  {\n    \"idresponsable\": {{profesionalId}},\n    \"fecha\": \"2026-10-16\",\n    \"descripcion\": \"Antibiótico por infección de oído\",\n    \"fechainicio\": \"2026-10-16\",\n    \"fechafin\": \"2026-10-26\",\n    \"medicacion\": \"Amoxicilina 250 mg cada 12 hs\",\n    \"archivo\": \"uploads/receta.jpg\"\n  },\n  {\n    \"idresponsable\": {{profesionalId}},\n    \"fecha\": \"2026-10-16\",\n    \"descripcion\": \"Curación de herida\",\n    \"fechainicio\": \"2026-10-16\",\n    \"fechafin\": \"2026-10-26\",\n    \"medicacion\": \"Pomada cicatrizante\",\n    \"archivo\": \"uploads/receta.jpg\"\n  }\n]",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Fecha de fin anterior a la de inicio (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('fechafin: anterior', () => pm.expect(pm.response.json().campos.fechafin).to.include('anterior'));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/tratamientos",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "tratamientos"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"idresponsable\": {{profesionalId}},\n  \"fecha\": \"2026-10-16\",\n  \"descripcion\": \"Antibiótico por infección de oído\",\n  \"fechainicio\": \"2026-10-16\",\n  \"fechafin\": \"2026-10-01\",\n  \"medicacion\": \"Amoxicilina 250 mg cada 12 hs\",\n  \"archivo\": \"uploads/receta.jpg\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Fecha de fin igual a la de inicio: OK (tratamiento de un día)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 201', () => pm.response.to.have.status(201));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/tratamientos",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "tratamientos"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"idresponsable\": {{profesionalId}},\n  \"fecha\": \"2026-10-16\",\n  \"descripcion\": \"Antibiótico por infección de oído\",\n  \"fechainicio\": \"2026-10-16\",\n  \"fechafin\": \"2026-10-16\",\n  \"medicacion\": \"Amoxicilina 250 mg cada 12 hs\",\n  \"archivo\": \"uploads/receta.jpg\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Sin medicación (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('medicacion: Campo obligatorio', () => pm.expect(pm.response.json().campos.medicacion).to.include('Campo obligatorio'));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/tratamientos",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "tratamientos"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"idresponsable\": {{profesionalId}},\n  \"fecha\": \"2026-10-16\",\n  \"descripcion\": \"Antibiótico por infección de oído\",\n  \"fechainicio\": \"2026-10-16\",\n  \"fechafin\": \"2026-10-26\",\n  \"medicacion\": \"\",\n  \"archivo\": \"uploads/receta.jpg\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Archivo con formato no permitido (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('archivo: Formato no permitido', () => pm.expect(pm.response.json().campos.archivo).to.include('Formato no permitido'));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/tratamientos",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "tratamientos"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"idresponsable\": {{profesionalId}},\n  \"fecha\": \"2026-10-16\",\n  \"descripcion\": \"Antibiótico por infección de oído\",\n  \"fechainicio\": \"2026-10-16\",\n  \"fechafin\": \"2026-10-26\",\n  \"medicacion\": \"Amoxicilina 250 mg cada 12 hs\",\n  \"archivo\": \"receta.docx\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Campos obligatorios faltantes (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('Marca los campos: idresponsable, fecha, descripcion, fechainicio, fechafin, medicacion, archivo', () => { const c = pm.response.json().campos; [\"idresponsable\",\"fecha\",\"descripcion\",\"fechainicio\",\"fechafin\",\"medicacion\",\"archivo\"].forEach((k) => pm.expect(c).to.have.property(k)); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/tratamientos",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "tratamientos"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "08.7 - Modificar historial clínico (GH_04)",
+          "description": "",
+          "item": [
+            {
+              "name": "Modificar entrada, vacuna, estudio y tratamiento a la vez",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                      "const entradas = pm.response.json().data;",
+                      "const registros = entradas.flatMap((h) => h.registroatencionmedica);",
+                      "const reg = (v) => registros.find((r) => r.idregistro === Number(pm.collectionVariables.get(v)));",
+                      "pm.test('Devuelve el historial actualizado', () => pm.expect(entradas).to.be.an('array').that.is.not.empty);",
+                      "pm.test('Entrada: descripción corregida', () => pm.expect(entradas.find((h) => h.idhistorial === Number(pm.collectionVariables.get('atencionId'))).descripcion).to.eql('Control general (corregido)'));",
+                      "pm.test('Vacuna: nuevo vencimiento y nuevo responsable', () => { const v = reg('registroVacunaId'); pm.expect(v.registrovacuna.fechavencimiento.slice(0, 10)).to.eql('2030-01-01'); pm.expect(v.responsable.tipo).to.eql('PROFESIONAL'); });",
+                      "pm.test('Estudio: resultado y archivo', () => { const e = reg('registroEstudioId'); pm.expect(e.registroestudio.resultado).to.eql('Resultado corregido'); pm.expect(e.registroestudio.archivo).to.eql('corregido.png'); });",
+                      "pm.test('Tratamiento: fin y medicación', () => { const t = reg('registroTratamientoId'); pm.expect(t.registrotratamiento.fechafin.slice(0, 10)).to.eql('2026-11-30'); pm.expect(t.registrotratamiento.medicacion).to.eql('Medicación corregida'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico"
+                  ]
+                },
+                "description": "Equivale al \"Guardar\" del formulario con un bloque por registro: se aplican todos los cambios juntos.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"atenciones\": [\n    {\n      \"idhistorial\": {{atencionId}},\n      \"descripcion\": \"Control general (corregido)\"\n    }\n  ],\n  \"registros\": [\n    {\n      \"idregistro\": {{registroVacunaId}},\n      \"fechavencimiento\": \"2030-01-01\",\n      \"idresponsable\": {{profesionalId}}\n    },\n    {\n      \"idregistro\": {{registroEstudioId}},\n      \"resultado\": \"Resultado corregido\",\n      \"archivo\": \"corregido.png\"\n    },\n    {\n      \"idregistro\": {{registroTratamientoId}},\n      \"fechafin\": \"2026-11-30\",\n      \"medicacion\": \"Medicación corregida\"\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Modificar una desparasitación (producto y próxima aplicación)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                      "const d = pm.response.json().data.flatMap((h) => h.registroatencionmedica).find((r) => r.idregistro === Number(pm.collectionVariables.get('registroDespId')));",
+                      "pm.test('Producto y próxima aplicación actualizados', () => { pm.expect(d.registrodesparasitacion.producto).to.eql('Drontal Plus'); pm.expect(d.registrodesparasitacion.proximaaplicacion.slice(0, 10)).to.eql(pm.collectionVariables.get('fechaFutura2')); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"registros\": [\n    {\n      \"idregistro\": {{registroDespId}},\n      \"producto\": \"Drontal Plus\",\n      \"proximaaplicacion\": \"{{fechaFutura2}}\"\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Cambiar solo el responsable (a la veterinaria)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                      "const v = pm.response.json().data.flatMap((h) => h.registroatencionmedica).find((r) => r.idregistro === Number(pm.collectionVariables.get('registroVacunaId')));",
+                      "pm.test('Ahora lo atendió la veterinaria', () => pm.expect(v.responsable.tipo).to.eql('VETERINARIA'));",
+                      "pm.test('El resto de los datos no cambió', () => pm.expect(v.registrovacuna.fechavencimiento.slice(0, 10)).to.eql('2030-01-01'));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"registros\": [\n    {\n      \"idregistro\": {{registroVacunaId}},\n      \"idresponsable\": {{veterinariaId}}\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Modificar solo la fecha de una entrada (la descripción queda intacta)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                      "const a = pm.response.json().data.find((h) => h.idhistorial === Number(pm.collectionVariables.get('atencionId')));",
+                      "pm.test('Fecha actualizada y descripción intacta', () => { pm.expect(a.fecha.slice(0, 10)).to.eql('2026-10-06'); pm.expect(a.descripcion).to.eql('Control general (corregido)'); });"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"atenciones\": [\n    {\n      \"idhistorial\": {{atencionId}},\n      \"fecha\": \"2026-10-06\"\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Fecha incoherente con lo ya guardado (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('fechavencimiento: posterior', () => pm.expect(pm.response.json().campos.fechavencimiento).to.include('posterior'));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico"
+                  ]
+                },
+                "description": "Se valida contra el vencimiento ya guardado de la vacuna.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"registros\": [\n    {\n      \"idregistro\": {{registroVacunaId}},\n      \"fechaaplicacion\": \"2099-01-01\"\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Vacuna inexistente (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('idvacuna: no existe', () => pm.expect(pm.response.json().campos.idvacuna).to.include('no existe'));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"registros\": [\n    {\n      \"idregistro\": {{registroVacunaId}},\n      \"idvacuna\": 99999\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Responsable inexistente (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('idresponsable: no existe', () => pm.expect(pm.response.json().campos.idresponsable).to.include('no existe'));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"registros\": [\n    {\n      \"idregistro\": {{registroVacunaId}},\n      \"idresponsable\": 99999\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Archivo de estudio con formato no permitido (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('archivo: Formato no permitido', () => pm.expect(pm.response.json().campos.archivo).to.include('Formato no permitido'));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"registros\": [\n    {\n      \"idregistro\": {{registroEstudioId}},\n      \"archivo\": \"virus.exe\"\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Archivo de estudio vacío: es obligatorio (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('archivo: Campo obligatorio', () => pm.expect(pm.response.json().campos.archivo).to.include('Campo obligatorio'));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"registros\": [\n    {\n      \"idregistro\": {{registroEstudioId}},\n      \"archivo\": null\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Descripción de atención vacía (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('descripcion: Campo obligatorio', () => pm.expect(pm.response.json().campos.descripcion).to.include('Campo obligatorio'));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"atenciones\": [\n    {\n      \"idhistorial\": {{atencionId}},\n      \"descripcion\": \"  \"\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Un cambio válido + uno inválido: no se guarda ninguno",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"atenciones\": [\n    {\n      \"idhistorial\": {{atencionId}},\n      \"descripcion\": \"NO DEBE GUARDARSE\"\n    }\n  ],\n  \"registros\": [\n    {\n      \"idregistro\": {{registroEstudioId}},\n      \"archivo\": \"x.exe\"\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Verificar que la descripción no cambió (atomicidad)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                      "const a = pm.response.json().data.find((h) => h.idhistorial === Number(pm.collectionVariables.get('atencionId')));",
+                      "pm.test('Sigue con la descripción anterior', () => pm.expect(a.descripcion).to.eql('Control general (corregido)'));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico"
+                  ]
+                },
+                "description": ""
+              }
+            },
+            {
+              "name": "Registro inexistente (404)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"registros\": [\n    {\n      \"idregistro\": 999999,\n      \"idresponsable\": {{veterinariaId}}\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Registro que pertenece a otro animal (404)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico"
+                  ]
+                },
+                "description": "registroAjenoId es un registro de Canela (seed): no se puede modificar desde el animal de prueba.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"registros\": [\n    {\n      \"idregistro\": {{registroAjenoId}},\n      \"idresponsable\": {{veterinariaId}}\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Entrada inexistente (404)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"atenciones\": [\n    {\n      \"idhistorial\": 999999,\n      \"descripcion\": \"x\"\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "idregistro inválido (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('Mensaje', () => pm.expect(pm.response.json().error).to.include('idregistro'));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"registros\": [\n    {\n      \"idregistro\": \"abc\",\n      \"idresponsable\": 1\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Sin cambios para guardar (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('Mensaje', () => pm.expect(pm.response.json().error).to.include('No se enviaron cambios'));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Registro sin ningún campo para modificar (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"registros\": [\n    {\n      \"idregistro\": {{registroVacunaId}}\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "\"atenciones\" y \"registros\" deben ser listas (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"atenciones\": \"no es una lista\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Animal sin registros en su historial (404)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 404', () => pm.response.to.have.status(404));",
+                      "pm.test('Mensaje', () => pm.expect(pm.response.json().error).to.include('no tiene registros'));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalVacioId}}/historial-clinico",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalVacioId}}",
+                    "historial-clinico"
+                  ]
+                },
+                "description": "Precondición de GH_04: el historial debe tener al menos un registro.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"atenciones\": [\n    {\n      \"idhistorial\": 1,\n      \"descripcion\": \"x\"\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Animal inexistente (404)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/999999/historial-clinico",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "999999",
+                    "historial-clinico"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"atenciones\": [\n    {\n      \"idhistorial\": 1,\n      \"descripcion\": \"x\"\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "08.8 - Verificaciones finales",
+          "description": "",
+          "item": [
+            {
+              "name": "Historial completo: orden cronológico y detalle por tipo (CT03)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                      "const r = pm.response.json();",
+                      "const registros = r.data.flatMap((h) => h.registroatencionmedica);",
+                      "const fechas = r.data.map((h) => new Date(h.fecha).getTime());",
+                      "pm.test('Entradas en orden cronológico', () => pm.expect(fechas).to.eql([...fechas].sort((a, b) => a - b)));",
+                      "pm.test('Están los 4 tipos de registro', () => pm.expect(registros.map((x) => x.tipo)).to.include.members(['VACUNA', 'DESPARASITACION', 'ESTUDIO', 'TRATAMIENTO']));",
+                      "pm.test('Cada registro informa su veterinaria o profesional', () => registros.forEach((x) => { pm.expect(x.responsable).to.have.property('nombre'); pm.expect(x.responsable.tipo).to.be.oneOf(['VETERINARIA', 'PROFESIONAL']); }));",
+                      "const detalle = { VACUNA: 'registrovacuna', DESPARASITACION: 'registrodesparasitacion', ESTUDIO: 'registroestudio', TRATAMIENTO: 'registrotratamiento' };",
+                      "pm.test('Cada registro tiene solo el detalle de su tipo', () => registros.forEach((x) => Object.entries(detalle).forEach(([tipo, rel]) => { if (x.tipo === tipo) pm.expect(x[rel]).to.be.an('object'); else pm.expect(x[rel]).to.be.null; })));",
+                      "pm.test('Todas las entradas son del animal de prueba', () => r.data.forEach((h) => pm.expect(h.idanimal).to.eql(Number(pm.collectionVariables.get('animalHistId')))));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico"
+                  ]
+                },
+                "description": ""
+              }
+            },
+            {
+              "name": "El otro animal sigue sin historial (no se mezclan datos)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                      "pm.test('Sin entradas', () => pm.expect(pm.response.json().total).to.eql(0));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalVacioId}}/historial-clinico",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalVacioId}}",
+                    "historial-clinico"
+                  ]
+                },
+                "description": ""
+              }
+            },
+            {
+              "name": "No se puede eliminar un animal con historial (CC11)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                      "pm.test('Informa los registros de historial', () => pm.expect(pm.response.json().relacionados.historialClinico).to.be.above(0));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}"
+                  ]
+                },
+                "description": ""
+              }
+            },
+            {
+              "name": "JSON mal formado (400)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                      "pm.test('Mensaje', () => pm.expect(pm.response.json().error).to.include('JSON'));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/atenciones",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "atenciones"
+                  ]
+                },
+                "description": "",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{roto",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Ruta inexistente dentro del historial (404)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Status 404', () => pm.response.to.have.status(404));",
+                      "pm.test('Mensaje', () => pm.expect(pm.response.json().error).to.eql('Ruta no encontrada'));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/animales/{{animalHistId}}/historial-clinico/no-existe",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "animales",
+                    "{{animalHistId}}",
+                    "historial-clinico",
+                    "no-existe"
+                  ]
+                },
+                "description": ""
+              }
+            }
+          ]
+        }
+      ]
     }
   ],
   "variable": [
@@ -1573,6 +5781,82 @@
     },
     {
       "key": "animalGatoCreadoId",
+      "value": ""
+    },
+    {
+      "key": "especieId",
+      "value": ""
+    },
+    {
+      "key": "profesionalId",
+      "value": ""
+    },
+    {
+      "key": "idvacuna",
+      "value": ""
+    },
+    {
+      "key": "registroAjenoId",
+      "value": ""
+    },
+    {
+      "key": "animalHistId",
+      "value": ""
+    },
+    {
+      "key": "animalVacioId",
+      "value": ""
+    },
+    {
+      "key": "atencionId",
+      "value": ""
+    },
+    {
+      "key": "registroVacunaId",
+      "value": ""
+    },
+    {
+      "key": "registroDespId",
+      "value": ""
+    },
+    {
+      "key": "registroEstudioId",
+      "value": ""
+    },
+    {
+      "key": "registroTratamientoId",
+      "value": ""
+    },
+    {
+      "key": "totalEntradas",
+      "value": ""
+    },
+    {
+      "key": "fechaHoy",
+      "value": ""
+    },
+    {
+      "key": "fechaFutura",
+      "value": ""
+    },
+    {
+      "key": "fechaFutura2",
+      "value": ""
+    },
+    {
+      "key": "fechaVencida",
+      "value": ""
+    },
+    {
+      "key": "fechaAplicVieja",
+      "value": ""
+    },
+    {
+      "key": "fechaVacAplic",
+      "value": ""
+    },
+    {
+      "key": "fechaVacVenc",
       "value": ""
     }
   ]
