@@ -1,9 +1,9 @@
 /*
- * Seed de datos de prueba para el módulo Animal (y el historial clínico).
+ * Seed de datos de prueba para el módulo Animal (y, de paso, el historial clínico).
  *
  * Uso (desde /backend):
- *   node prisma/seed.js            -> carga los datos (si ya hay animales, no hace nada)
- *   node prisma/seed.js --reset    -> borra los datos de animales y los vuelve a cargar
+ *   pnpm tsx prisma/seed.js            -> carga los datos (si ya hay animales, no hace nada)
+ *   pnpm tsx prisma/seed.js --reset    -> borra los datos de animales y los vuelve a cargar
  *
  * ATENCIÓN: --reset borra TODOS los animales y sus registros relacionados
  * (historial clínico, tránsitos, adopciones, gastos, solicitudes). Usar solo en desarrollo.

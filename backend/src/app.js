@@ -4,6 +4,7 @@ const cors = require('cors');
 
 const AppError = require('./lib/AppError');
 const animalRoutes = require('./routes/animalRoutes');
+const especieRoutes = require('./routes/especieRoutes');
 const historialClinicoRoutes = require('./routes/historialClinicoRoutes');
 
 const app = express();
@@ -15,6 +16,8 @@ app.use(express.json());
 app.use('/api/animales/:idanimal/historial-clinico', historialClinicoRoutes);
 // Módulo animal
 app.use('/api/animales', animalRoutes);
+// Módulo animal, especies
+app.use('/api/especies', especieRoutes);
 
 // Ruta inexistente
 app.use((req, res) => {

@@ -5,7 +5,7 @@
 ```bash
 cd backend
 pnpm install
-cp example.env .env
+cp .env.example .env
 ```
 Y completá la URL de conexión a la base local:
 
@@ -21,5 +21,6 @@ DATABASE_URL="postgresql://user:password@localhost:5432/mydb?schema=public"
 npx prisma generate # Genera el cliente local
 npx prisma migrate dev # Aplica las migraciones
 npx prisma studio # Comprueba la conexión
+pnpm tsx prisma/seed.js # Corre el seed que inserta datos de prueba, agregar --reset para borrar y volver a cargar los animales
 pnpm dev # Levanta el servidor en http://localhost:3000
 ```
