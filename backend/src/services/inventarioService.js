@@ -1,256 +1,243 @@
 const prisma = require("../../lib/prisma");
 
+// Error con código HTTP para que el controller responda bien (404, 400...)
+class HttpError extends Error {
+  constructor(status, message) {
+    super(message);
+    this.status = status;
+  }
+}
+
+// Umbrales fijos (coinciden con las tarjetas del front)
+const STOCK_BAJO_MENOR_A = 5;
+const DIAS_POR_VENCER = 60;
+
+// El front manda minúsculas ("seco", "entrada"); los enums del schema van en mayúsculas
+const mayus = (valor) => (valor ? String(valor).trim().toUpperCase() : valor);
+
+// Relaciones que se incluyen siempre al devolver un insumo
+const INCLUDE_INSUMO = {
+  alimento: { include: { especieanimal: true } },
+  medicamento: true,
+};
+
 class InventarioService {
-  // Obtener todos los insumos
-  async obtenerTodos() {
-    try {
-      const insumos = await prisma.insumo.findMany({
-        include: {
-          alimento: {
-            include: {
-              especieanimal: true,
-            },
-          },
-          medicamento: true,
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      });
-      return insumos;
-    } catch (error) {
-      throw new Error(`Error al obtener insumos: ${error.message}`);
+  // Listar insumos activos (filtro opcional por tipo: medicamento | alimento | insumo)
+  async obtenerTodos({ tipo } = {}) {
+    const where = { activo: true };
+
+    if (tipo === "medicamento") where.medicamento = { isNot: null };
+    if (tipo === "alimento") where.alimento = { isNot: null };
+    if (tipo === "insumo") {
+      where.medicamento = { is: null };
+      where.alimento = { is: null };
     }
+
+    return prisma.insumo.findMany({
+      where,
+      include: INCLUDE_INSUMO,
+      orderBy: { nombre: "asc" },
+    });
   }
 
-  // Obtener insumo por ID
   async obtenerPorId(id) {
-    try {
-      const insumo = await prisma.insumo.findUnique({
-        where: { idinsumo: parseInt(id) },
-        include: {
-          alimento: {
-            include: {
-              especieanimal: true,
-            },
-          },
-          medicamento: true,
-        },
-      });
-      if (!insumo) {
-        throw new Error("Insumo no encontrado");
-      }
-      return insumo;
-    } catch (error) {
-      throw new Error(`Error al obtener insumo: ${error.message}`);
-    }
+    const insumo = await prisma.insumo.findUnique({
+      where: { idinsumo: Number(id) },
+      include: INCLUDE_INSUMO,
+    });
+    if (!insumo) throw new HttpError(404, "Insumo no encontrado");
+    return insumo;
   }
 
-  // Crear nuevo insumo
+  // Crear insumo (+ medicamento o alimento) en una sola operación atómica
   async crear(datos) {
-    try {
-      const { tipo, ...resto } = datos;
+    const tipo = datos.tipo;
 
-      const nuevoInsumo = await prisma.insumo.create({
-        data: {
-          nombre: resto.nombre,
-          descripcion: resto.descripcion,
-          stock: parseInt(resto.stock),
-          fechavencimiento: resto.fechaVencimiento
-            ? new Date(resto.fechaVencimiento)
-            : null,
-          ...resto,
-        },
-      });
-
-      // Si es medicamento, crear el registro correspondiente
-      if (tipo === "medicamento" && resto.numerolote) {
-        await prisma.medicamento.create({
-          data: {
-            idinsumo: nuevoInsumo.idinsumo,
-            numerolote: resto.numerolote,
-            concentracion: resto.concentracion,
-            viaadministracion: resto.viaadministracion,
-          },
-        });
-      }
-
-      // Si es alimento, crear el registro correspondiente
-      if (tipo === "alimento" && resto.idespecie) {
-        await prisma.alimento.create({
-          data: {
-            idinsumo: nuevoInsumo.idinsumo,
-            idespecie: parseInt(resto.idespecie),
-            marca: resto.marca,
-            tipoalimento: resto.tipoalimento,
-            peso: resto.peso ? parseInt(resto.peso) : null,
-          },
-        });
-      }
-
-      return this.obtenerPorId(nuevoInsumo.idinsumo);
-    } catch (error) {
-      throw new Error(`Error al crear insumo: ${error.message}`);
+    if (!datos.nombre || datos.stock === undefined || datos.stock === "") {
+      throw new HttpError(400, "Nombre y stock son obligatorios");
     }
+    if (Number(datos.stock) < 0) {
+      throw new HttpError(400, "El stock no puede ser negativo");
+    }
+
+    const data = {
+      nombre: datos.nombre.trim(),
+      descripcion: datos.descripcion || null,
+      stock: Number(datos.stock),
+      fechavencimiento: datos.fechaVencimiento
+        ? new Date(datos.fechaVencimiento)
+        : null,
+    };
+
+    if (tipo === "medicamento") {
+      if (!datos.concentracion || !datos.viaadministracion) {
+        throw new HttpError(400, "Faltan datos del medicamento");
+      }
+      data.medicamento = {
+        create: {
+          numerolote: datos.numerolote || null,
+          concentracion: datos.concentracion,
+          viaadministracion: mayus(datos.viaadministracion),
+        },
+      };
+    }
+
+    if (tipo === "alimento") {
+      if (!datos.idespecie || !datos.tipoalimento || !datos.peso) {
+        throw new HttpError(400, "Faltan datos del alimento");
+      }
+      data.alimento = {
+        create: {
+          idespecie: Number(datos.idespecie),
+          marca: datos.marca || null,
+          tipoalimento: mayus(datos.tipoalimento),
+          peso: Number(datos.peso),
+        },
+      };
+    }
+
+    const nuevo = await prisma.insumo.create({
+      data,
+      include: INCLUDE_INSUMO,
+    });
+    return nuevo;
   }
 
-  // Actualizar insumo
+  // Actualizar datos del insumo (NO el stock: el stock se mueve solo con movimientos)
   async actualizar(id, datos) {
-    try {
-      const insumoExistente = await prisma.insumo.findUnique({
-        where: { idinsumo: parseInt(id) },
-      });
+    const existente = await this.obtenerPorId(id);
 
-      if (!insumoExistente) {
-        throw new Error("Insumo no encontrado");
-      }
-
-      const insumoActualizado = await prisma.insumo.update({
-        where: { idinsumo: parseInt(id) },
-        data: {
-          ...(datos.nombre && { nombre: datos.nombre }),
-          ...(datos.descripcion && { descripcion: datos.descripcion }),
-          ...(datos.stock !== undefined && { stock: parseInt(datos.stock) }),
-          ...(datos.fechaVencimiento !== undefined && {
-            fechavencimiento: datos.fechaVencimiento
-              ? new Date(datos.fechaVencimiento)
-              : null,
-          }),
-        },
-      });
-
-      return this.obtenerPorId(id);
-    } catch (error) {
-      throw new Error(`Error al actualizar insumo: ${error.message}`);
+    const data = {};
+    if (datos.nombre) data.nombre = datos.nombre.trim();
+    if (datos.descripcion !== undefined)
+      data.descripcion = datos.descripcion || null;
+    if (datos.fechaVencimiento !== undefined) {
+      data.fechavencimiento = datos.fechaVencimiento
+        ? new Date(datos.fechaVencimiento)
+        : null;
     }
+
+    if (existente.medicamento) {
+      const med = {};
+      if (datos.numerolote !== undefined)
+        med.numerolote = datos.numerolote || null;
+      if (datos.concentracion) med.concentracion = datos.concentracion;
+      if (datos.viaadministracion)
+        med.viaadministracion = mayus(datos.viaadministracion);
+      if (Object.keys(med).length) data.medicamento = { update: med };
+    }
+
+    if (existente.alimento) {
+      const ali = {};
+      if (datos.marca !== undefined) ali.marca = datos.marca || null;
+      if (datos.tipoalimento) ali.tipoalimento = mayus(datos.tipoalimento);
+      if (datos.peso) ali.peso = Number(datos.peso);
+      if (datos.idespecie) ali.idespecie = Number(datos.idespecie);
+      if (Object.keys(ali).length) data.alimento = { update: ali };
+    }
+
+    return prisma.insumo.update({
+      where: { idinsumo: Number(id) },
+      data,
+      include: INCLUDE_INSUMO,
+    });
   }
 
-  // Eliminar insumo
+  // Baja lógica (CU-IN07): el insumo queda inactivo y se conserva el historial
   async eliminar(id) {
-    try {
-      const insumoExistente = await prisma.insumo.findUnique({
-        where: { idinsumo: parseInt(id) },
-      });
-
-      if (!insumoExistente) {
-        throw new Error("Insumo no encontrado");
-      }
-
-      await prisma.insumo.delete({
-        where: { idinsumo: parseInt(id) },
-      });
-
-      return { mensaje: "Insumo eliminado correctamente" };
-    } catch (error) {
-      throw new Error(`Error al eliminar insumo: ${error.message}`);
-    }
+    await this.obtenerPorId(id);
+    await prisma.insumo.update({
+      where: { idinsumo: Number(id) },
+      data: { activo: false },
+    });
+    return { mensaje: "Insumo dado de baja correctamente" };
   }
 
-  // Registrar movimiento de inventario
-  async registrarMovimiento(datos) {
-    try {
-      const { idinsumo, idpersona, tipo, cantidad, motivo } = datos;
+  // Registrar entrada/salida. idpersona sale del usuario logueado, no del body.
+  async registrarMovimiento({ idinsumo, idpersona, tipo, cantidad, motivo }) {
+    const tipoMov = mayus(tipo);
+    const cant = Number(cantidad);
 
-      // Obtener insumo actual
-      const insumo = await prisma.insumo.findUnique({
-        where: { idinsumo: parseInt(idinsumo) },
+    if (!["ENTRADA", "SALIDA"].includes(tipoMov)) {
+      throw new HttpError(400, "El tipo debe ser ENTRADA o SALIDA");
+    }
+    if (!Number.isInteger(cant) || cant <= 0) {
+      throw new HttpError(400, "La cantidad debe ser un entero mayor a cero");
+    }
+    if (!motivo || !motivo.trim()) {
+      throw new HttpError(400, "El motivo es obligatorio");
+    }
+
+    // La validación y la escritura van dentro de la misma transacción:
+    // evita que dos salidas simultáneas dejen el stock en negativo.
+    return prisma.$transaction(async (tx) => {
+      const insumo = await tx.insumo.findUnique({
+        where: { idinsumo: Number(idinsumo) },
       });
-
-      if (!insumo) {
-        throw new Error("Insumo no encontrado");
+      if (!insumo || !insumo.activo) {
+        throw new HttpError(404, "Insumo no encontrado");
+      }
+      if (tipoMov === "SALIDA" && cant > insumo.stock) {
+        throw new HttpError(
+          400,
+          `Stock insuficiente. Stock actual: ${insumo.stock}`,
+        );
       }
 
-      // Validar stock para salidas
-      if (tipo === "SALIDA" && cantidad > insumo.stock) {
-        throw new Error("La cantidad no puede superar el stock actual");
-      }
-
-      // Crear movimiento
-      const movimiento = await prisma.movimientoinventario.create({
+      const movimiento = await tx.movimientoInventario.create({
         data: {
-          idinsumo: parseInt(idinsumo),
-          idpersona: parseInt(idpersona),
-          tipo,
-          cantidad: parseInt(cantidad),
+          idinsumo: insumo.idinsumo,
+          idpersona: Number(idpersona),
+          tipo: tipoMov,
+          cantidad: cant,
           fecha: new Date(),
-          motivo,
+          motivo: motivo.trim(),
         },
       });
 
-      // Actualizar stock del insumo
-      const nuevoStock =
-        tipo === "ENTRADA"
-          ? insumo.stock + parseInt(cantidad)
-          : insumo.stock - parseInt(cantidad);
-
-      await prisma.insumo.update({
-        where: { idinsumo: parseInt(idinsumo) },
-        data: { stock: nuevoStock },
+      await tx.insumo.update({
+        where: { idinsumo: insumo.idinsumo },
+        data: {
+          stock:
+            tipoMov === "ENTRADA" ? { increment: cant } : { decrement: cant },
+        },
       });
 
       return movimiento;
-    } catch (error) {
-      throw new Error(`Error al registrar movimiento: ${error.message}`);
-    }
+    });
   }
 
-  // Obtener movimientos de un insumo
   async obtenerMovimientos(idinsumo) {
-    try {
-      const movimientos = await prisma.movimientoinventario.findMany({
-        where: { idinsumo: parseInt(idinsumo) },
-        include: {
-          usuario: {
-            select: {
-              idpersona: true,
-              nombrecompleto: true,
-            },
-          },
-        },
-        orderBy: {
-          fecha: "desc",
-        },
-      });
-      return movimientos;
-    } catch (error) {
-      throw new Error(`Error al obtener movimientos: ${error.message}`);
-    }
+    await this.obtenerPorId(idinsumo);
+    return prisma.movimientoInventario.findMany({
+      where: { idinsumo: Number(idinsumo) },
+      include: {
+        usuario: { select: { idpersona: true, nombrecompleto: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
   }
 
-  // Obtener estadísticas de inventario
   async obtenerEstadisticas() {
-    try {
-      const total = await prisma.insumo.count();
-      const stockBajo = await prisma.insumo.count({
+    const limite = new Date();
+    limite.setDate(limite.getDate() + DIAS_POR_VENCER);
+
+    const [total, stockBajo, porVencer] = await Promise.all([
+      prisma.insumo.count({ where: { activo: true } }),
+      prisma.insumo.count({
+        where: { activo: true, stock: { lt: STOCK_BAJO_MENOR_A } },
+      }),
+      prisma.insumo.count({
         where: {
-          stock: {
-            lt: 5,
-          },
+          activo: true,
+          fechavencimiento: { not: null, gte: new Date(), lte: limite },
         },
-      });
+      }),
+    ]);
 
-      const fechaHoy = new Date();
-      const fecha60Dias = new Date();
-      fecha60Dias.setDate(fecha60Dias.getDate() + 60);
-
-      const porVencer = await prisma.insumo.count({
-        where: {
-          fechavencimiento: {
-            not: null,
-            lte: fecha60Dias,
-          },
-        },
-      });
-
-      return {
-        total,
-        stockBajo,
-        porVencer,
-      };
-    } catch (error) {
-      throw new Error(`Error al obtener estadísticas: ${error.message}`);
-    }
+    return { total, stockBajo, porVencer };
   }
 }
 
 module.exports = new InventarioService();
+module.exports.HttpError = HttpError;
