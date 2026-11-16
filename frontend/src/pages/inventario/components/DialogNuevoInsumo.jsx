@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -27,7 +28,7 @@ const estadoInicial = {
   idespecie: "", //se debe traer la tabla de especies desde el back
 };
 
-export default function DialogNuevoInsumo({ abierto, onCerrar }) {
+export default function DialogNuevoInsumo({ abierto, onCerrar, onGuardar }) {
   const [form, setForm] = useState(estadoInicial);
 
   const handleCambio = (campo, valor) => {
@@ -46,27 +47,31 @@ export default function DialogNuevoInsumo({ abierto, onCerrar }) {
     }));
   };
 
-  const handleGuardar = () => {
-    if (!form.nombre || !form.tipo || !form.stock || !form.fechaVencimiento) {
-      alert("Completá los campos obligatorios");
+  const handleGuardar = async () => {
+    if (!form.nombre || !form.tipo || !form.stock) {
+      toast.error("Completá los campos obligatorios");
       return;
     }
     if (form.tipo === "medicamento") {
       if (!form.concentracion || !form.viaadministracion) {
-        alert("Completá todos los campos del medicamento");
+        toast.error("Completá todos los campos del medicamento");
         return;
       }
     }
     if (form.tipo === "alimento") {
       if (!form.tipoalimento || !form.peso || !form.idespecie) {
-        alert("Completá todos los campos del alimento");
+        toast.error("Completá todos los campos del alimento");
         return;
       }
     }
-    // Acá va la llamada al backend
-    console.log(form);
-    setForm(estadoInicial);
-    onCerrar();
+
+    try {
+      await onGuardar(form);
+      setForm(estadoInicial);
+      onCerrar();
+    } catch (e) {
+      toast.error(e.message);
+    }
   };
 
   const handleCerrar = () => {
@@ -137,7 +142,7 @@ export default function DialogNuevoInsumo({ abierto, onCerrar }) {
 
           <div>
             <label className="text-sm font-medium text-gray-700 mb-1 block">
-              Fecha de vencimiento *
+              Fecha de vencimiento
             </label>
             <Input
               type="date"
@@ -251,6 +256,7 @@ export default function DialogNuevoInsumo({ abierto, onCerrar }) {
                   <option value="">Seleccioná una especie</option>
                   <option value="1">Perro</option>
                   <option value="2">Gato</option>
+                  <option value="3">Otro</option>
                 </Select>
               </div>
             </div>

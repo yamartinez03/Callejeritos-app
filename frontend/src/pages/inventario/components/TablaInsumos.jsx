@@ -37,6 +37,26 @@ export default function TablaInsumos({
     }
   };
 
+  const getVencimientoColor = (fechaVencimiento) => {
+    if (!fechaVencimiento) return "text-gray-500";
+
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const vencimiento = new Date(fechaVencimiento);
+    vencimiento.setHours(0, 0, 0, 0);
+
+    const diferenciaDias = Math.ceil(
+      (vencimiento - hoy) / (1000 * 60 * 60 * 24),
+    );
+
+    if (diferenciaDias < 0) {
+      return "text-red-600";
+    } else if (diferenciaDias <= 60) {
+      return "text-orange-500";
+    }
+    return "text-gray-500";
+  };
+
   if (insumos.length === 0) {
     return (
       <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-400">
@@ -71,7 +91,9 @@ export default function TablaInsumos({
                 {insumo.tipo}
               </TableCell>
               <TableCell className="text-black">{insumo.stock}</TableCell>
-              <TableCell className="text-gray-500">
+              <TableCell
+                className={getVencimientoColor(insumo.fechaVencimiento)}
+              >
                 {insumo.fechaVencimiento ?? "—"}
               </TableCell>
               <TableCell className="text-center">

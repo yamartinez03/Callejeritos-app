@@ -3,6 +3,7 @@ import { Routes, Route, useNavigate } from "react-router-dom";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { Toaster } from "sonner";
 import Login from "./Login/pages/Login";
 import LoginSuccess from "./Login/pages/LoginSuccess";
 import Registro from "./Login/pages/Registro";
@@ -122,6 +123,7 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <AppRoutes />
+        <Toaster position="bottom-right" />
       </AuthProvider>
     </ThemeProvider>
   );
