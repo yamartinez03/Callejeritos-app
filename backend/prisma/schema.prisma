@@ -1,7 +1,6 @@
 generator client {
-  provider     = "prisma-client"
+  provider     = "prisma-client-js"
   output       = "../generated/prisma"
-  moduleFormat = "cjs"
 }
 
 datasource db {
@@ -284,7 +283,8 @@ model Insumo {
   nombre               String                 @db.VarChar(100)
   descripcion          String?                @db.VarChar(500)
   stock                Int
-  fechavencimiento     DateTime               @db.Date
+  fechavencimiento     DateTime?               @db.Date // opcional: los insumos generales no vencen
+  activo               Boolean                @default(true) // baja lógica
   createdAt            DateTime               @default(now())
   updatedAt            DateTime               @updatedAt
   alimento             Alimento?
@@ -292,6 +292,7 @@ model Insumo {
   movimientoinventario MovimientoInventario[]
 
   @@index([fechavencimiento])
+  @@index([activo])
   @@map("insumo")
 }
 
