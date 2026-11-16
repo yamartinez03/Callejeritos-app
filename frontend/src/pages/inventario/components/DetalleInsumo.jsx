@@ -5,6 +5,7 @@ import {
 } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Eye } from "lucide-react";
 
 function DetallesMedicamento({ insumo }) {
   return (
@@ -87,8 +88,8 @@ export default function PopoverDetalleInsumo({ insumo }) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button size="sm" variant="outline">
-          Ver más
+        <Button size="icon" variant="outline" title="Ver más">
+          <Eye className="h-4 w-4" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80">

@@ -18,6 +18,7 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
+import { Trash2 } from "lucide-react";
 import PopoverDetalleInsumo from "./DetalleInsumo";
 import DialogRegistroMovimiento from "./RegistroMovimiento";
 
@@ -25,7 +26,7 @@ export default function TablaInsumos({
   insumos,
   onMovimiento,
   onEliminar,
-  esAdmin,
+  esStaff,
 }) {
   const [eliminarOpen, setEliminarOpen] = useState(null);
   const [insumoAEliminar, setInsumoAEliminar] = useState(null);
@@ -73,13 +74,13 @@ export default function TablaInsumos({
               <TableCell className="text-gray-500">
                 {insumo.fechaVencimiento ?? "—"}
               </TableCell>
-              <TableCell>
-                <div className="flex gap-2">
+              <TableCell className="text-center">
+                <div className="flex gap-2 justify-center">
                   {/* Popover para Ver más - siempre visible */}
                   <PopoverDetalleInsumo insumo={insumo} />
 
-                  {/* Botones de administrador */}
-                  {esAdmin && (
+                  {/* Botones de staff */}
+                  {esStaff && (
                     <>
                       {/* Popover Entrada */}
                       <DialogRegistroMovimiento
@@ -104,11 +105,12 @@ export default function TablaInsumos({
                       >
                         <AlertDialogTrigger asChild>
                           <Button
-                            size="sm"
+                            size="icon"
                             variant="destructive"
                             onClick={() => setInsumoAEliminar(insumo)}
+                            title="Eliminar"
                           >
-                            Eliminar
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>

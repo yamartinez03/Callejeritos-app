@@ -15,15 +15,12 @@ export default function FiltroTipo({ filtroActivo, onCambiarFiltro }) {
           className="px-4 py-1.5 rounded-full text-sm font-medium border transition-all duration-200"
           style={{
             backgroundColor:
-              filtroActivo === f.valor ? "var(--filter-active)" : "transparent",
+              filtroActivo === f.valor ? "var(--primary)" : "transparent",
             color:
               filtroActivo === f.valor
                 ? "var(--primary-foreground)"
-                : "var(--muted-foreground)",
-            borderColor:
-              filtroActivo === f.valor
-                ? "var(--filter-active)"
-                : "var(--border)",
+                : "var(--foreground)",
+            borderColor: "var(--border)",
           }}
         >
           {f.etiqueta}

@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ArrowDown, ArrowUp } from "lucide-react";
 
 export default function DialogRegistroMovimiento({ insumo, tipo, onConfirmar }) {
   const [cantidad, setCantidad] = useState("");
@@ -41,8 +42,8 @@ export default function DialogRegistroMovimiento({ insumo, tipo, onConfirmar }) 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button size="sm" variant="outline">
-          {tipo === "entrada" ? "Entrada" : "Salida"}
+        <Button size="icon" variant="outline" title={tipo === "entrada" ? "Entrada" : "Salida"}>
+          {tipo === "entrada" ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-72">

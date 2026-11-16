@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import TablaInsumos from "./components/TablaInsumos";
 import FiltroTipo from "./components/FiltroTipo";
@@ -64,9 +65,12 @@ const insumosMock = [
 ];
 
 export default function InventarioPage() {
+  const { user } = useAuth();
   const [filtro, setFiltro] = useState("todos");
   const [abrirNuevoInsumo, setAbrirNuevoInsumo] = useState(false);
-  const [esAdmin, setEsAdmin] = useState(true); // Temporal: true para admin, false para usuario general--------------------- manejo de roles temporal
+  
+  // Verificar si el usuario es staff (puede hacer movimientos)
+  const esStaff = user?.role === "administrador" || user?.role === "nucleo_operativo";
 
   const insumosFiltrados =
     filtro === "todos"
@@ -88,7 +92,7 @@ export default function InventarioPage() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: "var(--muted)" }}>
       {/* Contenido */}
-      <div className="max-w-6xl mx-auto px-6 py-6">
+      <div className="px-10 py-8">
         {/* Título y botón */}
         <div className="flex justify-between items-center mb-6">
           <div>
@@ -97,7 +101,7 @@ export default function InventarioPage() {
               Medicamentos, alimentos e insumos
             </p>
           </div>
-          {esAdmin && (
+          {esStaff && (
             <Button onClick={() => setAbrirNuevoInsumo(true)}>
               + Agregar insumo
             </Button>
@@ -141,12 +145,12 @@ export default function InventarioPage() {
           insumos={insumosFiltrados}
           onMovimiento={handleMovimiento}
           onEliminar={handleEliminar}
-          esAdmin={esAdmin}
+          esStaff={esStaff}
         />
       </div>
 
-      {/* Modal Nuevo Insumo - solo admin */}
-      {esAdmin && (
+      {/* Modal Nuevo Insumo - solo staff */}
+      {esStaff && (
         <DialogNuevoInsumo
           abierto={abrirNuevoInsumo}
           onCerrar={() => setAbrirNuevoInsumo(false)}

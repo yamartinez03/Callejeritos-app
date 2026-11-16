@@ -8,13 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select } from "@/components/ui/select";
 
 const estadoInicial = {
   nombre: "",
@@ -115,15 +109,14 @@ export default function DialogNuevoInsumo({ abierto, onCerrar }) {
             <label className="text-sm font-medium text-gray-700 mb-1 block">
               Tipo *
             </label>
-            <Select onValueChange={handleTipoCambio}>
-              <SelectTrigger>
-                <SelectValue placeholder="Seleccioná un tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Medicamento">Medicamento</SelectItem>
-                <SelectItem value="Alimento">Alimento</SelectItem>
-                <SelectItem value="Insumo">Insumo general</SelectItem>
-              </SelectContent>
+            <Select
+              value={form.tipo}
+              onChange={(e) => handleTipoCambio(e.target.value)}
+            >
+              <option value="">Seleccioná un tipo</option>
+              <option value="Medicamento">Medicamento</option>
+              <option value="Alimento">Alimento</option>
+              <option value="Insumo">Insumo general</option>
             </Select>
           </div>
 
@@ -188,19 +181,16 @@ export default function DialogNuevoInsumo({ abierto, onCerrar }) {
                   Vía de administración *
                 </label>
                 <Select
-                  onValueChange={(val) =>
-                    handleCambio("viaadministracion", val)
+                  value={form.viaadministracion}
+                  onChange={(e) =>
+                    handleCambio("viaadministracion", e.target.value)
                   }
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccioná una vía" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ORAL">Oral</SelectItem>
-                    <SelectItem value="INTRAVENOSA">Intravenosa</SelectItem>
-                    <SelectItem value="CUTANEA">Cutánea</SelectItem>
-                    <SelectItem value="SUBCUTANEA">Subcutánea</SelectItem>
-                  </SelectContent>
+                  <option value="">Seleccioná una vía</option>
+                  <option value="ORAL">Oral</option>
+                  <option value="INTRAVENOSA">Intravenosa</option>
+                  <option value="CUTANEA">Cutánea</option>
+                  <option value="SUBCUTANEA">Subcutánea</option>
                 </Select>
               </div>
             </div>
@@ -241,30 +231,26 @@ export default function DialogNuevoInsumo({ abierto, onCerrar }) {
                   Tipo de alimento *
                 </label>
                 <Select
-                  onValueChange={(val) => handleCambio("tipoalimento", val)}
+                  value={form.tipoalimento}
+                  onChange={(e) => handleCambio("tipoalimento", e.target.value)}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccioná un tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="SECO">Seco</SelectItem>
-                    <SelectItem value="HUMEDO">Húmedo</SelectItem>
-                    <SelectItem value="FRESCO">Fresco</SelectItem>
-                  </SelectContent>
+                  <option value="">Seleccioná un tipo</option>
+                  <option value="SECO">Seco</option>
+                  <option value="HUMEDO">Húmedo</option>
+                  <option value="FRESCO">Fresco</option>
                 </Select>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-1 block">
                   Especie destino
                 </label>
-                <Select onValueChange={(val) => handleCambio("idespecie", val)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccioná una especie" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">Perro</SelectItem>
-                    <SelectItem value="2">Gato</SelectItem>
-                  </SelectContent>
+                <Select
+                  value={form.idespecie}
+                  onChange={(e) => handleCambio("idespecie", e.target.value)}
+                >
+                  <option value="">Seleccioná una especie</option>
+                  <option value="1">Perro</option>
+                  <option value="2">Gato</option>
                 </Select>
               </div>
             </div>
