@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { especieApi } from "@/services/especieService";
 import {
   Dialog,
   DialogContent,
@@ -30,6 +31,20 @@ const estadoInicial = {
 
 export default function DialogNuevoInsumo({ abierto, onCerrar, onGuardar }) {
   const [form, setForm] = useState(estadoInicial);
+  const [especies, setEspecies] = useState([]);
+
+  useEffect(() => {
+    const cargarEspecies = async () => {
+      try {
+        const data = await especieApi.listar();
+        setEspecies(data);
+      } catch {
+        // eslint-disable-next-line no-unused-vars
+        toast.error("Error al cargar especies");
+      }
+    };
+    cargarEspecies();
+  }, []);
 
   const handleCambio = (campo, valor) => {
     setForm((prev) => ({ ...prev, [campo]: valor }));
@@ -119,9 +134,9 @@ export default function DialogNuevoInsumo({ abierto, onCerrar, onGuardar }) {
               onChange={(e) => handleTipoCambio(e.target.value)}
             >
               <option value="">Seleccioná un tipo</option>
-              <option value="Medicamento">Medicamento</option>
-              <option value="Alimento">Alimento</option>
-              <option value="Insumo">Insumo general</option>
+              <option value="medicamento">Medicamento</option>
+              <option value="alimento">Alimento</option>
+              <option value="insumo">Insumo general</option>
             </Select>
           </div>
 
@@ -152,7 +167,7 @@ export default function DialogNuevoInsumo({ abierto, onCerrar, onGuardar }) {
           </div>
 
           {/* Campos específicos de medicamento */}
-          {form.tipo === "Medicamento" && (
+          {form.tipo === "medicamento" && (
             <div className="flex flex-col gap-4 border-t border-gray-100 pt-4">
               <p className="text-sm font-semibold text-gray-700">
                 Datos del medicamento
@@ -202,7 +217,7 @@ export default function DialogNuevoInsumo({ abierto, onCerrar, onGuardar }) {
           )}
 
           {/* Campos específicos de alimento */}
-          {form.tipo === "Alimento" && (
+          {form.tipo === "alimento" && (
             <div className="flex flex-col gap-4 border-t border-gray-100 pt-4">
               <p className="text-sm font-semibold text-gray-700">
                 Datos del alimento
@@ -254,9 +269,11 @@ export default function DialogNuevoInsumo({ abierto, onCerrar, onGuardar }) {
                   onChange={(e) => handleCambio("idespecie", e.target.value)}
                 >
                   <option value="">Seleccioná una especie</option>
-                  <option value="1">Perro</option>
-                  <option value="2">Gato</option>
-                  <option value="3">Otro</option>
+                  {especies.map((especie) => (
+                    <option key={especie.idespecie} value={especie.idespecie}>
+                      {especie.nombre}
+                    </option>
+                  ))}
                 </Select>
               </div>
             </div>

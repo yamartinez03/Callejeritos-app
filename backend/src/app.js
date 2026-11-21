@@ -4,6 +4,7 @@ const cors = require("cors");
 // Rutas
 const animalRoutes = require("./routes/animalRoutes");
 const inventarioRoutes = require("./routes/inventarioRoutes");
+const especieRoutes = require("./routes/especieRoutes");
 // const publicacionRoutes = require("./routes/publicacionRoutes");
 
 const app = express();
@@ -19,6 +20,7 @@ apiRouter.get("/health", (req, res) => res.json({ ok: true }));
 
 apiRouter.use("/animal", animalRoutes);
 apiRouter.use("/inventario", inventarioRoutes);
+apiRouter.use("/especies", especieRoutes);
 // apiRouter.use("/publicaciones", publicacionRoutes);
 
 app.use("/api", apiRouter);
