@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { STAFF_ROLES, ALL_AUTHENTICATED_ROLES } from "@/lib/roles";
+import { STAFF_ROLES, ALL_AUTHENTICATED_ROLES, ROLES } from "@/lib/roles";
 import {
   Sidebar,
   SidebarContent,
@@ -25,11 +25,12 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronRight, Eye, FileText, LogOut, BookCheck } from "lucide-react";
+import { ChevronRight, Eye, FileText, LogOut, BookCheck, Package } from "lucide-react";
 import logo from "@/assets/callejeritos-logo.png";
 // Avatar de ejemplo mientras no tenemos el backend
 import avatarEjemplo from "@/assets/ejemploUser.jpg";
 import PublicacionesPage from "../publicaciones/PublicacionesPage";
+import InventarioPage from "../inventario/InventarioPage";
 
 // ─── Navegación del sidebar ───────────────────────────────────────────────────
 // Cada módulo nuevo que agreguen va acá como un objeto en el array `NAV_ITEMS`.
@@ -41,7 +42,7 @@ import PublicacionesPage from "../publicaciones/PublicacionesPage";
 const NAV_ITEMS = [
   {
     title: "Publicaciones",
-    icon: FileText, // ícono acá
+    icon: FileText,
     roles: ALL_AUTHENTICATED_ROLES,
     subitems: [
       {
@@ -53,10 +54,16 @@ const NAV_ITEMS = [
       {
         title: "Ver publicaciones",
         key: "verPublicacion",
-        icon: Eye, // <--- Igual acá
+        icon: Eye,
         roles: ALL_AUTHENTICATED_ROLES,
       },
     ],
+  },
+  {
+    title: "Inventario",
+    icon: Package,
+    key: "inventario",
+    roles: [...STAFF_ROLES, ROLES.TRANSITANTE],
   },
   /* ── AGREGAR NUEVOS GRUPOS ACÁ ──────────────────────────────────────────────
   Ejemplo:
@@ -79,12 +86,6 @@ const NAV_ITEMS = [
      icon: IconoLucide,
      key: "adopciones",
      roles: ALL_AUTHENTICATED_ROLES,
-  },
-  {
-     title: "Inventario",
-     icon: IconoLucide,
-     key: "inventario",
-     roles: STAFF_ROLES, // Solo staff
   }, */
 ];
 
@@ -107,6 +108,9 @@ function renderContent(currentPage) {
 
     case "verPublicacion":
       return <PublicacionesPage />;
+
+    case "inventario":
+      return <InventarioPage />;
 
     case "perfil":
       return (
